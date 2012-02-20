@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>Tamino Dauth</author>
+ <class>Widget</class>
+ <widget class="QWidget" name="Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>854</width>
+    <height>681</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>vjassdocgui</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="titleLabel">
+         <property name="text">
+          <string>Title:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="KLineEdit" name="titleLineEdit"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="KEditListBox" name="filesEditListBox">
+       <property name="title">
+        <string>Files</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KPushButton" name="selectFilePushButton">
+       <property name="text">
+        <string>Select File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="optionsGroupBox">
+       <property name="title">
+        <string>Options</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="optionJassCheckBox">
+          <property name="text">
+           <string>JASS only</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="optionDebugCheckBox">
+          <property name="text">
+           <string>Debug</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="optionPrivateCheckBox">
+          <property name="text">
+           <string>Private</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="optionTextmacrosCheckBox">
+          <property name="text">
+           <string>Text macro spaces</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QCheckBox" name="optionFunctionsCheckBox">
+          <property name="text">
+           <string>Function spaces</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="optionHtmlCheckBox">
+          <property name="text">
+           <string>HTML</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QCheckBox" name="optionPagesCheckBox">
+          <property name="text">
+           <string>HTML pages</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QCheckBox" name="optionSpecialpagesCheckBox">
+          <property name="text">
+           <string>HTML special pages</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QCheckBox" name="optionSyntaxCheckBox">
+          <property name="text">
+           <string>Check syntax</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QCheckBox" name="optionVerboseCheckBox">
+          <property name="text">
+           <string>Verbose</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QCheckBox" name="optionTimeCheckBox">
+          <property name="text">
+           <string>Display time</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="0">
+         <widget class="QCheckBox" name="optionAlphabeticalCheckBox">
+          <property name="text">
+           <string>Sort alphabetically</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="outputDirectoryLabel">
+         <property name="text">
+          <string>Output directory:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="KUrlRequester" name="outputDirectoryUrlRequester">
+         <property name="mode">
+          <set>KFile::Directory|KFile::ExistingOnly|KFile::LocalOnly</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="compilationDirectoryLabel">
+         <property name="text">
+          <string>Compilation directory:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="KUrlRequester" name="compilationDirectoryUrlRequester">
+         <property name="mode">
+          <set>KFile::Directory|KFile::ExistingOnly|KFile::LocalOnly</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="databaseDirectoryLabel">
+         <property name="text">
+          <string>Database directory:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="KUrlRequester" name="databaseDirectoryUrlRequester">
+         <property name="mode">
+          <set>KFile::Directory|KFile::ExistingOnly|KFile::LocalOnly</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="KEditListBox" name="importDirectoriesEditListBox">
+       <property name="title">
+        <string>Import directories</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KPushButton" name="selectImportDirectoryPushButton">
+       <property name="text">
+        <string>Select Import Directory</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KEditListBox" name="databasesEditListBox">
+       <property name="title">
+        <string>Databases</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="selectDatabasePushButton">
+       <property name="text">
+        <string>Select Database</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KDialogButtonBox" name="dialogButtonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KEditListBox</class>
+   <extends>QGroupBox</extends>
+   <header>keditlistbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KDialogButtonBox</class>
+   <extends>QDialogButtonBox</extends>
+   <header>kdialogbuttonbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>klineedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KPushButton</class>
+   <extends>QPushButton</extends>
+   <header>kpushbutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KUrlRequester</class>
+   <extends>QFrame</extends>
+   <header>kurlrequester.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

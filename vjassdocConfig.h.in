@@ -1,0 +1,7 @@
+#define vjassdoc_VERSION_MAJOR @vjassdoc_VERSION_MAJOR@
+#define vjassdoc_VERSION_MINOR @vjassdoc_VERSION_MINOR@
+#define vjassdoc_VERSION "@vjassdoc_VERSION@"
+#cmakedefine DEBUG
+#cmakedefine GUI
+#cmakedefine SQLITE
+#cmakedefine DOC

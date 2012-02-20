@@ -1,0 +1,484 @@
+2009-11-09 Tamino Dauth <tamino@cdauth.de>
+* Revised option descriptions.
+* Revised German option descriptions.
+* Released version 0.3.
+
+2009-11-04 Tamino Dauth <tamino@cdauth.de>
+* --database option has shortcut -L now instead of -b.
+* Fixed various option issues.
+* Added --nocall option support.
+
+2009-11-03 Tamino Dauth <tamino@cdauth.de>
+* Revised several code files and renamed members of class File.
+
+2009-10-31 Tamino Dauth <tamino@cdauth.de>
+* Revised class Call.
+
+2009-10-24 Tamino Dauth <tamino@cdauth.de>
+* Added function createHtmlHeader.
+* Added file path argument to option --database.
+* Added several argument parsing functionality to option parsing.
+* Renamed several members of class Parser.
+
+2009-10-11 Tamino Dauth <tamino@cdauth.de>
+* Added first JassHelper 0.9.Z.3 support.
+* Improved class intialization.
+
+2009-09-11 Tamino Dauth <tamino@cdauth.de>
+* Renamed option methods of class Vjassdoc.
+* Duration and CPU duration of Vjassdoc are accessable now.
+* Added file "src/gui/application.hpp".
+* Added file "src/gui/application.cpp".
+* Improved class Widget.
+* Improved UI of class Widget.
+
+2009-09-10 Tamino Dauth <tamino@cdauth.de>
+* Improved cmake files.
+* Added file "src/gui/widget.hpp".
+* Added file "src/gui/widget.cpp".
+
+2009-09-09 Tamino Dauth <tamino@cdauth.de>
+* Improved cmake files.
+* Improved main window widget UI.
+
+2009-09-08 Tamino Dauth <tamino@cdauth.de>
+* Fixed database and improved writing.
+* Added several methods to class Parser.
+* Improved adding databases.
+* Revised some cmake files.
+* Added files "src/gui/CMakeFiles.txt", "src/gui/main.cpp", "src/gui/mainwindow.hpp", "src/gui/mainwindow.cpp" and "src/gui/ui/widget.ui".
+
+2009-08-08 Tamino Dauth <tamino@cdauth.de>
+* Improved class Compiler.
+
+2009-08-03 Tamino Dauth <tamino@cdauth.de>
+* Added method autoCompletion to class Parser.
+* Added file "tests/autocompletion.cpp".
+* Flag "debug" should enable test file compilation now.
+* Fixed option "--time".
+
+2009-07-30 Tamino Dauth <tamino@cdauth.de>
+* Fixed several memory access errors.
+
+2009-07-29 Tamino Dauth <tamino@cdauth.de>
+* Fixed and added SQLITE macro checks which should decrease compile time if you do not use sqlite flag.
+* Improved documentation comment initialization.
+
+2009-07-28 Tamino Dauth <tamino@cdauth.de>
+* Moved method definition getToken of class File into file "src/utilities.cpp".
+* Fixed super detection bug of members.
+* Improved compiler functionality.
+* Improved documentation comment initialization.
+
+2009-07-25 Tamino Dauth <tamino@cdauth.de>
+* Revised build files.
+
+2009-07-24 Tamino Dauth <tamino@cdauth.de>
+* Added file "src/hook.h".
+* Added file "src/hook.cpp".
+* Implemented hook support.
+* Splitted up Vjassdoc's init function.
+* Empty lists won't be written into HTML output anymore.
+* Fixed struct database save bug.
+
+2009-07-18 Tamino Dauth <tamino@cdauth.de>
+* Added file "kate/vjassdoc.xml".
+* Added file "kate/CMakeLists.txt".
+* Fixed several bugs of database creation.
+
+2009-07-17 Tamino Dauth <tamino@cdauth.de>
+* Improved documentation comment database treatment.
+
+2009-07-16 Tamino Dauth <tamino@cdauth.de>
+* Improved database treatment.
+* Improved documentation comment initialization.
+
+2009-07-15 Tamino Dauth <tamino@cdauth.de>
+* Revised class DocComment.
+
+2009-07-14 Tamino Dauth <tamino@cdauth.de>
+* Revised documentation comment treatment.
+
+2009-07-08 Tamino Dauth <tamino@cdauth.de>
+* Added first implementation of block documentation comment support.
+
+2009-06-23 Tamino Dauth <tamino@cdauth.de>
+* Fixed database identifier bug.
+* Fixed several database bugs.
+
+2009-06-20 Tamino Dauth <tamino@cdauth.de>
+* Added first implementation of block comment support.
+* Structs with more index space are supported now.
+* Keys are supported now.
+
+2009-06-03 Tamino Dauth <tamino@cdauth.de>
+* Fixed documentation comment parsing.
+* Fixed locale directory detection.
+* Improved inheritance list page.
+* Improved library pages.
+
+2009-05-20 Tamino Dauth <tamino@cdauth.de>
+* Improved syntax checker mode.
+* Added requirement list page support.
+
+2009-05-17 Tamino Dauth <tamino@cdauth.de>
+* Debug lines will be ignored correctly now when debug option is not selected.
+* Fixed memory leaks of lists of class Parser.
+* Fixed parameter detection in method getFunction of class File.
+* Parameters will be added to list of class Parser now.
+* Added text macro argument detection for parameters.
+
+2009-05-16 Tamino Dauth <tamino@cdauth.de>
+* Fixed method sqlFilteredString of class Object.
+* Fixed several database bugs.
+* Fixed parameter list handling bugs of class FunctionInterface.
+* Improved database handling.
+
+2009-05-15 Tamino Dauth <tamino@cdauth.de>
+* Added class Local.
+* Added options --functions and --syntax.
+* Jass keywords local, set, call, if, else, elseif, endif, return, loop, endloop and exitwhen will be detected correctly now.
+* Module methods will pe parsed correctly now.
+* Improved inheritance list page.
+
+2009-05-08 Tamino Dauth <tamino@cdauth.de>
+* Added member supportsDatabaseCreation to class Vjassdoc.
+* Added method getImplementationList to class Interface.
+* Added method moduleExpression to class Implementation.
+* Methods getMemberList, getImplementationList and getMethodList of class Interface are protected now.
+* Implementations will be listed on interface and struct pages now.
+* Improved inheritance list page.
+* Improved SQLite support.
+* Updatet translation .po files.
+
+2009-05-07 Tamino Dauth <tamino@cdauth.de>
+* Added method extensions() to class Struct.
+* Renamed section "Extension" on struct pages to "Extensions".
+* A simple extension tree will be listed on struct pages now.
+* Added method createInheritanceListPage() to struct Parser.
+
+2009-05-03 Tamino Dauth <tamino@cdauth.de>
+* Added method initClass() to class Object and all of its child classes.
+* Added option --databases.
+* Fixed several memory access errors.
+
+2009-04-23 Tamino Dauth <tamino@cdauth.de>
+* Added file "src/parameter.h".
+* Added file "src/parameter.cpp".
+* Added first implementation of class Parameter.
+* Method getTableCreationStatement() of class Parser is static now.
+* Added method getTableColumns() to class Parser.
+* Added member sqlColumns to class Object and all child classes.
+* Added member sqlColumnStatement to class Object and all child classes.
+* Added method getTableName() to class Parser.
+* Added member sqlTableName to class Object and all child classes.
+
+2009-04-18 Tamino Dauth <tamino@cdauth.de>
+* Improved text macro instance pages.
+* Revised some output strings.
+* Member path won't be shown on source file pages anymore.
+
+2009-04-17 Tamino Dauth <tamino@cdauth.de>
+* Fixed memory access error which was caused by wrong argument count usage.
+* Added <pre> tag into source file output.
+* Added --help option information about --no<expression> options.
+* Added module and implementation sections in HTML output.
+* Added method getModule() to class File.
+* Added member currentModule to class File.
+* Added method getCurrentContainer() to class File.
+* Added member isInModule to class File.
+* Line numbers on source file pages will be displayed correctly now.
+* Modules will be parsed correctly now.
+* Operator methods will be parsed correctly now.
+* Added struct UsesModule to class Implementation.
+* Added struct UsesTextMacro to class TextMacro.
+* Added functionality to show implementations on module pages.
+* Added functionality to show instances on text macro pages.
+
+2009-04-16 Tamino Dauth <tamino@cdauth.de>
+* Added class Implementation.
+* Added class Module.
+* Added private method getImplementation() to class File.
+
+2009-04-15 Tamino Dauth <tamino@cdauth.de>
+* Added members ModuleExpression, EndmoduleExpression, OptionalExpression, SuperExpression and ThistypeExpression to enum Expression of class File.
+* Revised the order of members of enum Expression of class File.
+* Added method getFirstLineExpression() to class File.
+* Moved some code of the constructor of class File to method getFirstLineExpression().
+* Unnecessary expressions will be skipped now when searching for the first line expression.
+* Added static method searchObjectInCustomList() to class Parser.
+* Added thistype detection for member types.
+* Added super detection for member types.
+* Improved findValue() method of class Parser.
+* Converted all private members of Object child classes to protected members.
+
+2009-03-21 Tamino Dauth <tamino@cdauth.de>
+* Added SQLITE flag implementation.
+* Revised main function.
+
+2009-03-09 Tamino Dauth <tamino@cdauth.de>
+* Added object lists from library page to scope page.
+* Added option --textmacros.
+* Improved value detection.
+* Released version 0.2.3.
+
+2009-03-08 Tamino Dauth <tamino@cdauth.de>
+* Program won't crash anymore when creating struct pages.
+* Improved algorithm in method hasToSearchValueObject() of class Object.
+* You can have multiply documentation comment keywords at one line now.
+
+2009-03-07 Tamino Dauth <tamino@cdauth.de>
+* Added methods getKeyword(), getLibrary(), getScope(), getInterface() and getStruct() to class File.
+* Private code is parsable now for most objects which can could be private.
+* Added option --private.
+* Fixed various bugs.
+* Added method sqlTableHeader() to class Object.
+* Added method fileExists() to class Parser.
+* User will be asked now when program is attempting to overwrite an older database file.
+* Converted some functions to inline functions.
+
+2009-03-04 Tamino Dauth <tamino@cdauth.de>
+* Preprocessor will now be found correctly again.
+* Added first implementation of documentation comment object keyword detection.
+* Method getToken() of class File is static now.
+* Added method proteceted setIdentifier() to class Object.
+
+2009-02-24 Tamino Dauth <tamino@cdauth.de>
+* Renamed method loadDatabase() of class Parser to addDatabase().
+
+2009-02-21 Tamino Dauth <tamino@cdauth.de>
+* Added support for documentation keywords @state and @source.
+* Added back to start page link to object pages.
+* Added inheritance members and methods to struct pages.
+* Added undocumented objects list to start page.
+
+2009-02-19 Tamino Dauth <tamino@cdauth.de>
+* Replaced gettext preparation file "internationalisation.h".
+* Fixed namespace syntax errors.
+* Added first stub keyword support.
+* Improved object exclution.
+
+2009-02-12 Tamino Dauth <tamino@cdauth.de>
+* Increased database creation speed by adding executions "BEGIN TRANSACTION" and "COMMIT".
+* Added columns ValueLiteral and SizeLiteral for the Globals and Members table.
+
+2009-02-11 Tamino Dauth <tamino@cdauth.de>
+* Added abstract method pageNavigation() to class Object.
+* There won't be created any tables anymore (replaced by list mode).
+* Removed methd addObjectListTableHeader() of class Parser.
+* Removed method item() of class Object.
+* Added method findValue() to class Object.
+* If any global has an object as size or value it will be linked correctly now.
+* Released version 0.2.2.
+
+2009-02-10 Tamino Dauth <tamino@cdauth.de>
+* Fixed library compilation.
+* Fixed some SQL statements.
+
+2009-02-09 Tamino Dauth <tamino@cdauth.de>
+* Added method removeDatabase() to class Parser.
+* Improved open and remove database functionality of class Parser.
+
+2009-01-31 Tamino Dauth <tamino@cdauth.de>
+* Added methods loadDatabase() and getTableCreationStatement() to class Parser.
+* Added a new constructor to class Object and all of its child classes.
+* Database will be created in the right directory now.
+
+2009-01-27 Tamino Dauth <tamino@cdauth.de>
+* Revised function parameter parsing method getFunction() of class File.
+* Empty comments won't be added to the comment list anymore.
+
+2009-01-26 Tamino Dauth <tamino@cdauth.de>
+* Line numbers in the index file will link to their lines on the source code pages now.
+* Literal values first will be checked whether they are real literals before the program searches in parsers lists for it.
+
+2009-01-25 Helmut Lämmle <helmut-laemmle@web.de>
+* Added first version of the Macedonian translation file.
+
+2009-01-25 Tamino Dauth <tamino@cdauth.de>
+* Source file pages will contain their whole code now.
+* Libraries will be linked on source file pages at their code line.
+* Struct pages list all child structs now.
+* Created an rpm file for vjassdoc.
+* Revised the main cmake file.
+* Released version 0.2.1.
+
+2009-01-24 Tamino Dauth <tamino@cdauth.de>
+* Added compiler platform flag to the cmake file.
+* Moved the comparator parent class to the Parser class.
+* Parser comparator search does now work correctly.
+* Revised the page output of the Library, the Interface and the Struct classes.
+
+2009-01-23 Tamino Dauth <tamino@cdauth.de>
+* Revised some cmake files.
+* Changed to cmake.
+
+2009-01-20 Tamino Dauth <tamino@cdauth.de>
+* Added a constant char variable for the directory separator character (on Linux /).
+* Fixed some additions of the directory separator character.
+
+2009-01-19 Tamino Dauth <tamino@cdauth.de>
+* Added a comparator class for getting specified object lists.
+
+2009-01-17 Tamino Dauth <tamino@cdauth.de>
+* Arguments will also start at the index 1 on Windows now.
+* Backslash character will be detected correctly for Windows file paths.
+* Replaced the option --vjass by te new option --jass.
+
+2009-01-15 Tamino Dauth <tamino@cdauth.de>
+* Public and static properties are displayed correctly now.
+* Each object can have its own page now.
+* Revised HTML output file.
+* Fixed gettext strings for documentation comment items.
+
+2009-01-14 Tamino Dauth <tamino@cdauth.de>
+* Fixed time measurement.
+* Fixed alphabetical sortation.
+
+2009-01-11 Tamino Dauth <tamino@cdauth.de>
+* Added the --pages option.
+* Replaced the nothing expression with the - character.
+
+2009-01-10 Tamino Dauth <tamino@cdauth.de>
+* Implemented the item() and the sqlStatement() methods into the Object class.
+* Renamed the --binary option to --database.
+* Revised SQLite database handling.
+* Quote characters will be written correctly into SQLite databases now.
+
+2009-01-09 Tamino Dauth <tamino@cdauth.de>
+* Argument errors will be showed in the error stream now.
+* Revised binary save mode.
+* The static and the delegate properties of the member class will be displayed correctly now.
+* If there is no initializer for a library there will be shown a - instead of nothing now.
+
+2009-01-08 Tamino Dauth <tamino@cdauth.de>
+* Revised the search algorithm.
+* You are able to combine program options now.
+* There will be a Yes or No instead of a 1 or 0 output now.
+* Parameter types will be listened correctly now.
+
+2008-12-30 Tamino Dauth <tamino@cdauth.de>
+* Added some cmake files.
+
+2008-12-28 Tamino Dauth <tamino@cdauth.de>
+* Changed list types from std::list<Object*> to std::list<typename*>.
+
+2008-11-26 Tamino Dauth <tamino@cdauth.de>
+* Improved binary save mode.
+
+2008-11-26 Tamino Dauth <tamino@cdauth.de>
+* Improved binary save mode.
+
+2008-11-24 Tamino Dauth <tamino@cdauth.de>
+* // and /// character sequences will be ignored in strings now.
+* Documentation comments after text macro calls will be parsed correctly now.
+* Documentation comments in the same line as their objects will be parsed without the /// prefix now.
+* Public functions will be parsed correctly now.
+* Struct blocks will be parsed correctly now.
+
+2008-11-23 Tamino Dauth <tamino@cdauth.de>
+* Documentation comments of private objects will be cleared now.
+
+2008-11-22 Tamino Dauth <tamino@cdauth.de>
+* Fixed documentation comments output handling.
+* Added the clearDocComment() method to the File class
+* Comment methods of the File class won't return anything anymore.
+* Removed the searchObjectByLine() method of the Parser class.
+
+2008-11-21 Tamino Dauth <tamino@cdauth.de>
+* Adding of default types won't crash the program anymore.
+* Type size is shown correctly now.
+
+2008-11-14 Tamino Dauth <tamino@cdauth.de>
+* Options won't be translated anymore.
+* Fixed and added many init() and item() methods of the Object child classes.
+* Revised tables of the HTML output file.
+* The TextMacroInstance class got the new method textMacro() which will be shown in the HTML file now.
+* The Function class got the new method isPublic() which will be shown in the HTML file now.
+
+2008-11-12 Tamino Dauth <tamino@cdauth.de>
+* Added output functionality for the FunctionInterface class.
+* The Expression, DocExpression, expressionText and docExpressionText members of the File class are public now.
+* gettext preprocessors will be used for table headers now.
+* Added the --html option.
+* Documentation comment titles will be shown correctly now.
+
+2008-10-31 Tamino Dauth <tamino@cdauth.de>
+* Fixed a bug in the getGlobal() method of the File class.
+* Added m_isPublic member to the Global class.
+* Removed titles option and all titles related members.
+* Removed classes which were inherited by the Type, the Global class.
+* Added literal get methods.
+
+2008-10-29 Tamino Dauth <tamino@cdauth.de>
+* Revised some item() methods.
+
+2008-10-26 Tamino Dauth <tamino@cdauth.de>
+* Splitted the Parser constructor into the constructor and the parse() method.
+* By splitting the constructor I fixed the parser == 0 bug.
+* Added the m_ prefix to many members of the Object class and it child classes.
+* Added the item() method functionality to the Comment and DocComment classes.
+* Added the init() method functionality to the DocComment class.
+* Added the searchObjectByLine() method to the Parser class.
+
+2008-10-25 Tamino Dauth <tamino@cdauth.de>
+* Fixed a bug which caused a memory access error.
+
+2008-10-22 Tamino Dauth <tamino@cdauth.de>
+* Splittet all object classes into their own files.
+* Added the GPLv2 note into each file which did not contain it before.
+
+2008-10-20 Tamino Dauth <tamino@cdauth.de>
+* Added some debug messages.
+* The "--debugmode" option was renamed to "--debug".
+* Using gettext for internationalisation and localisation now.
+
+2008-10-19 Tamino Dauth <tamino@cdauth.de>
+* Fixed some bugs.
+* Added the WIN_32 preprocessor.
+* Added the print method to the Vjassdoc class.
+* All parts of the vjasssdk were moved to a svn repository.
+
+2008-10-18 Tamino Dauth <tamino@cdauth.de>
+* Fixed some syntax errors.
+* Note that the enum Expression is using the same names as the object classes!
+* The Property class was renamed to Member again.
+* Added member isDelegate to the Member class.
+* Renamed method getIsStatic() of the Member class to isStatic().
+* Added method isDelegate() to the Member class.
+* Added method getLibrary() to the File class.
+* Added library_once and delegate keyword handling ability to the program.
+* Added to nearly all (whithout MaxExpressions) members of the enum Expression of the File class a Expression postfix.
+* Private objects never will be parsed now.
+* Added the --time option which could be used for getting the duration and CPU ticks.
+* Fixed nearly all syntax errors.
+* Added the m_object member to the DocComment class.
+* Added the object() method to the DocComment class.
+
+2008-10-15 Tamino Dauth <tamino@cdauth.de>
+* Added --verbose option which should effect showing more information on screen.
+* Removed all getIdentifier method calls of the File class (We don't need it anymore).
+* Added the VJASSDOC_ prefix before preprocessor definitions of header files.
+* Fixed many syntax errors.
+
+2008-10-04 Tamino Dauth <tamino@cdauth.de>
+* Project changed from Kate to KDevelop.
+* Fixed some syntax errors.
+* Unions ware changed to classes.
+
+2008-09-21 Tamino Dauth <tamino@cdauth.de>
+* Renamed all add methods of the parser class to add.
+* Added some unsigned prefixes.
+* Added some start properties to the object classes (all properties which have to be initialized after parsing all files).
+* Replaced some of the old add method calls in the file.cpp file.
+* Removed the object property of the DocComment class.
+* Default return types of interface methods should be found now.
+
+2008-09-05 Tamino Dauth <tamino@cdauth.de>
+* Removed the a namespace.
+* Moved the main function from the Vjassdoc class into a single file.
+
+2008-09-02 Tamino Dauth <tamino@cdauth.de>
+* Removed const prefix of some properties.
+* Program options will be saved in the Vjassdoc class and not as arguments.
+* The search algorithm compares just the identifier now. This will be fixed (You have to compare everything for each class).
