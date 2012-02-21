@@ -34,18 +34,18 @@ int main()
 	std::cout << "This test shows how the auto completion works." << std::endl;
 	std::cout << "Enter your code line, please." << std::endl;
 	std::cin >> line;
-	unsigned int index = 0;
+	std::size_t index = 0;
 	std::cout << "Enter your line index number, please." << std::endl;
 	std::cin >> index;
 	// Usually you should call Vjassdoc::configure before using it.
-	Vjassdoc::getParser()->add(new Struct("Hans", 0, 0, 0, 0, 0, false, std::string(), std::string()));
-	std::list<class Object*> results = Vjassdoc::getParser()->autoCompletion(line, index);
+	Vjassdoc::parser()->add(new Struct("Hans", 0, 0, 0, 0, 0, false, std::string(), std::string()));
+	std::list<class Object*> results = Vjassdoc::parser()->autoCompletion(line, index);
 	std::cout << "Results:" << std::endl;
-	
+
 	for (std::list<class Object*>::iterator iterator = results.begin(); iterator != results.end(); ++iterator)
 		std::cout << (*iterator)->identifier() << std::endl;
-	
+
 	Vjassdoc::clear(); // Deletes the parser.
 
 	return EXIT_SUCCESS;
-} 
+}

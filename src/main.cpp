@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	// Set the text message domain.
 	bindtextdomain("vjassdoc", LOCALE_DIR);
 	textdomain("vjassdoc");
-	
+
 	static struct option options[] =
 	{
 		{"version",                 no_argument,             0, 'V'},
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 #endif
 		{0, 0, 0, 0}
 	};
-	
+
 	bool jass = false;
 	bool debug = false;
 	bool parsePrivate = false;
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 	std::list<std::string> databases;
 	std::list<std::string> filePaths;
 	int optionShortcut;
-	
+
 	while (true)
 	{
 		int optionIndex = 0;
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 
 		if (optionShortcut == -1)
 			break;
-     
+
 		switch (optionShortcut)
 		{
 			case 'V':
@@ -185,10 +185,10 @@ int main(int argc, char *argv[])
 				"This is free software: you are free to change and redistribute it.\n"
 				"There is NO WARRANTY, to the extent permitted by law."
 				) << std::endl;
-				
+
 				return EXIT_SUCCESS;
 			}
-			
+
 			case 'h':
 			{
 				printf("vjassdoc %s.\n\n", Vjassdoc::version);
@@ -240,91 +240,91 @@ int main(int argc, char *argv[])
 				_("\t-T --title <arg>            <arg> has to be replaced by the title which is used for the API documentation.\n") <<
 				_("\t-I --importdirs <args>      <args> has to be replaced by one or more import directories (Used for the //! import macro in vJass).\n") <<
 				_("\t-D --dir <arg>              <arg> has to be replaced by the output directory path.\n") <<
-#ifdef SQLITE			
+#ifdef SQLITE
 				_("\t-B --databases <args>       <args> has to be replaced by the SQLite3 databases which should be added to the output.\n") <<
 #endif
 				std::endl <<
 				_("Several arguments has to be separated by using the : character.\n") <<
 				_("\nReport bugs to tamino@cdauth.de or on http://sourceforge.net/projects/vjasssdk/") <<
 				std::endl;
-	
+
 				return EXIT_SUCCESS;
 			}
-			
+
 			case 'j':
 				jass = true;
-				
+
 				break;
 
 			case 'd':
 				debug = true;
-				
+
 				break;
-			
+
 			case 'p':
 				parsePrivate = true;
-				
+
 				break;
-			
+
 			case 'm':
 				textmacros = true;
-				
+
 				break;
-			
+
 			case 'f':
 				functions = true;
-				
+
 				break;
-			
+
 			case 'l':
 				html = true;
-				
+
 				break;
-			
+
 			case 'g':
 				pages = true;
-				
+
 				break;
-			
+
 			case 's':
 				specialPages = true;
-				
+
 				break;
-			
+
 			case 'x':
 				syntax = true;
-				
+
 				break;
-				
+
 			case 'C':
 				compileFilePath = optarg;
-				
+
 				break;
-#ifdef SQLITE					
+#ifdef SQLITE
 			case 'L':
 				databaseFilePath = optarg;
-				
+
 				break;
 #endif
-			
+
 			case 'v':
 				verbose = true;
-				
+
 				break;
-			
+
 			case 't':
 				time = true;
-				
+
 				break;
-			
+
 			case 'a':
 				alphabetical = true;
-				
+
 				break;
-			
+
 			case 'T':
 				title = optarg;
-				
+
 				break;
 
 			case 'I':
@@ -335,22 +335,22 @@ int main(int argc, char *argv[])
 						if (*iterator == path)
 						{
 							fprintf(stderr, _("Import directory path \"%s\" has already been added to list.\n"), path);
-							
+
 							continue;
 						}
 					}
 
 					importDirs.push_back(path);
 				}
-				
+
 				break;
-			
+
 			case 'D':
 				dir = optarg;
-				
+
 				break;
-			
-#ifdef SQLITE			
+
+#ifdef SQLITE
 			case 'B':
 				for (char *path = strtok(optarg, ":"); path != 0;  path = strtok(0, ":"))
 				{
@@ -359,36 +359,36 @@ int main(int argc, char *argv[])
 						if (*iterator == path)
 						{
 							fprintf(stderr, _("Database \"%s\" has already been added to list.\n"), path);
-							
+
 							continue;
 						}
 					}
-		
+
 					databases.push_back(path);
 				}
-				
+
 				break;
 #endif
-				
+
 			default:
 				for (int j = 0; j < Parser::MaxLists; ++j)
 				{
 					if (strcmp(options[optionIndex].name, objectListOption[j]) == 0)
-					{					
+					{
 						if (parseObjectsOfList[j])
 							parseObjectsOfList[j] = false;
 						else
 							fprintf(stderr, _("Objects of list %d already won't be parsed.\n"), j);
-						
+
 						break;
 					}
 				}
-				
+
 				break;
 		}
 	}
-		
-	
+
+
 	if (optind < argc)
 	{
 		for ( ; optind < argc; ++optind)
@@ -398,11 +398,11 @@ int main(int argc, char *argv[])
 				if (*iterator == argv[optind])
 				{
 						fprintf(stderr, _("File path \"%s\" has already been added to list.\n"), argv[optind]);
-						
+
 						continue;
 				}
 			}
-			
+
 			filePaths.push_back(argv[optind]);
 		}
 
@@ -410,10 +410,10 @@ int main(int argc, char *argv[])
 	else
 	{
 		std::cerr << _("Missing file arguments.") << std::endl;
-		
+
 		return EXIT_FAILURE;
 	}
-	
+
 	if (pages && !html)
 		std::cerr << _("Warning: Although there won't be created any HTML files you have used the --pages option.") << std::endl;
 

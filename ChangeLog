@@ -1,3 +1,13 @@
+2012-02-20 Tamino Dauth <tamino@cdauth.de>
+* Revised everything and fixed old bugs:
+* GUI supports now proper file selection via buttons and URL completion via line edit.
+* Static library is created because of errors with shared.
+* SQLite is searched properly.
+* UI header is generated properly.
+* Compile definitions are available as CMake options now.
+* Fixed some syntax errors (wtf?).
+* Added missing license hints to files.
+
 2009-11-09 Tamino Dauth <tamino@cdauth.de>
 * Revised option descriptions.
 * Revised German option descriptions.

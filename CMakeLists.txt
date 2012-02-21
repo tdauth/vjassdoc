@@ -29,7 +29,6 @@ option(DOC
 	"Generates API documentation as well."
 	OFF)
 
-
 find_package(Gettext REQUIRED)
 
 if (GETTEXT_FOUND)
@@ -77,6 +76,7 @@ if (SQLITE)
 	endif ()
 endif ()
 
+# required for locale files - gettext
 add_definitions(-DLOCALE_DIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
 
 add_subdirectory(src)
