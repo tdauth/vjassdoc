@@ -42,7 +42,7 @@ void Implementation::initClass()
 }
 #endif
 
-Implementation::Implementation(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Object *container, const std::string &moduleExpression, bool isOptional) : Object(identifier, sourceFile, line, docComment), m_container(container), m_moduleExpression(moduleExpression), m_isOptional(isOptional)
+Implementation::Implementation(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Object *container, const std::string &moduleExpression, bool isOptional) : Object(parser, identifier, sourceFile, line, docComment), m_container(container), m_moduleExpression(moduleExpression), m_isOptional(isOptional)
 {
 }
 
@@ -56,7 +56,7 @@ Implementation::Implementation(std::vector<const unsigned char*> &columnVector) 
 void Implementation::init()
 {
 	//std::cout << "Before search of " << this->moduleExpression() << std::endl;
-	this->m_module = static_cast<class Module*>(this->searchObjectInList(this->moduleExpression(), Parser::Modules));
+	this->m_module = boost::polymorphic_cast<class Module*>(this->parser()->searchObjectInList(this->moduleExpression(), Parser::Modules, this));
 	//std::cout << "Searching for module " << this->moduleExpression() << std::endl;
 
 	if (this->m_module != 0)
@@ -101,7 +101,7 @@ std::string Implementation::sqlStatement() const
 	<< "Container=" << Object::objectId(this->container()) << ", "
 	<< "Module=" << Object::objectId(this->module()) << ", "
 	<< "IsOptional=" << this->isOptional();
-	
+
 	return sstream.str();
 }
 #endif

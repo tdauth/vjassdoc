@@ -36,7 +36,7 @@ class Interface : public Object
 
 		static void initClass();
 #endif
-		Interface(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
+		Interface(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
 #ifdef SQLITE
 		Interface(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -54,10 +54,10 @@ class Interface : public Object
 		class Library *m_library;
 		class Scope *m_scope;
 		bool m_isPrivate;
-		
-		void getMemberList(std::ofstream &file) const;
+
+		void getMemberList(std::ofstream &file, const Parser::SpecificObjectList &memberList) const;
 		void getImplementationList(std::ofstream &file) const;
-		void getMethodList(std::ofstream &file) const;
+		void getMethodList(std::ofstream &file, const Parser::SpecificObjectList &memberList) const;
 };
 
 inline bool Interface::isPrivate() const

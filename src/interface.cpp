@@ -20,6 +20,9 @@
 
 #include <sstream>
 
+#include <boost/cast.hpp>
+#include <boost/foreach.hpp>
+
 #include "objects.hpp"
 #include "internationalisation.hpp"
 #include "vjassdoc.hpp"
@@ -42,7 +45,7 @@ void Interface::initClass()
 }
 #endif
 
-Interface::Interface(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate) : Object(identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate)
+Interface::Interface(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate) : Object(parser, identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate)
 {
 }
 
@@ -87,20 +90,20 @@ void Interface::page(std::ofstream &file) const
 	<< "\t\t" << Object::showBooleanProperty(this->isPrivate()) << '\n'
 	<< "\t\t<h2><a name=\"Members\">" << _("Members") << "</a></h2>\n"
 	;
-	
-	this->getMemberList(file);
-	
+
+	this->getMemberList(file, this->parser()->getSpecificList<IsInContainer>(Parser::Members, this));
+
 	file
 	<< "\t\t<h2><a name=\"Implementations\">" << _("Implementations") << "</a></h2>\n"
 	;
-	
+
 	this->getImplementationList(file);
-	
+
 	file
 	<< "\t\t<h2><a name=\"Methods\">" << _("Methods") << "</a></h2>\n"
 	;
-	
-	this->getMethodList(file);
+
+	this->getMethodList(file, this->parser()->getSpecificList<IsInContainer>(Parser::Methods, this));
 }
 
 #ifdef SQLITE
@@ -112,7 +115,7 @@ std::string Interface::sqlStatement() const
 	<< "Library=" << Object::objectId(this->library()) << ", "
 	<< "Scope=" << Object::objectId(this->scope()) << ", "
 	<< "IsPrivate=" << this->isPrivate();
-	
+
 	return sstream.str();
 }
 #endif
@@ -127,37 +130,35 @@ class Scope* Interface::scope() const
 	return this->m_scope;
 }
 
-void Interface::getMemberList(std::ofstream &file) const
+void Interface::getMemberList(std::ofstream &file, const Parser::SpecificObjectList &memberList) const
 {
-	std::list<class Object*> memberList = Vjassdoc::parser()->getSpecificList(Parser::Members, Object::IsInContainer(), this);
-	
 	if (!memberList.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = memberList.begin(); iterator != memberList.end(); ++iterator)
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, memberList)
 		{
-			class Member *member = static_cast<class Member*>(*iterator);
-		
+			const Member *member = boost::polymorphic_cast<Member*>(ref.second);
+
 			file << "\t\t\t<li>";
-			
+
 			if (member->isPublic())
 				file << "public ";
-			
+
 			if (member->isPrivate())
 				file << "private ";
-		
+
 			if (member->isStatic())
 				file << "static ";
-			
+
 			if (member->isConstant())
 				file << "constant ";
-			
+
 			if (member->isDelegate())
 				file << "delegate ";
-			
+
 			file << Object::objectPageLink(member->type(), member->typeExpression()) << ' ' << Object::objectPageLink(member);
-			
+
 			if (member->size() != 0)
 				file << '[' << Object::objectPageLink(member->size()) << ']';
 			else if (member->sizeLiteral() != -1)
@@ -166,10 +167,10 @@ void Interface::getMemberList(std::ofstream &file) const
 				file << " = " << Object::objectPageLink(member->value());
 			else if (member->valueLiteral() != "-")
 				file << " = " << member->valueLiteral();
-			
+
 			file << "</li>\n";
 		}
-		
+
 		file << "\t\t</ul>\n";
 	}
 	else
@@ -178,69 +179,65 @@ void Interface::getMemberList(std::ofstream &file) const
 
 void Interface::getImplementationList(std::ofstream &file) const
 {
-	std::list<class Object*> implementationList = Vjassdoc::parser()->getSpecificList(Parser::Implementations, Object::IsInContainer(), this);
-	
+	Parser::SpecificObjectList implementationList = parser()->getSpecificList<IsInContainer>(Parser::Implementations, this);
+
 	if (!implementationList.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = implementationList.begin(); iterator != implementationList.end(); ++iterator)
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, implementationList)
 		{
-			class Implementation *implementation = static_cast<class Implementation*>(*iterator);
-		
+			const Implementation *implementation = boost::polymorphic_cast<Implementation*>(ref.second);
+
 			file << "\t\t\t<li>";
-			
+
 			if (implementation->isOptional())
 				file << "optional ";
-			
+
 			file
 			<< Object::objectPageLink(implementation)
 			<< "</li>\n"
 			;
 		}
-		
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
 }
 
-void Interface::getMethodList(std::ofstream &file) const
+void Interface::getMethodList(std::ofstream &file, const Parser::SpecificObjectList &methodList) const
 {
-	std::list<class Object*> methodList = Vjassdoc::parser()->getSpecificList(Parser::Methods, Object::IsInContainer(), this);
-	
 	if (!methodList.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = methodList.begin(); iterator != methodList.end(); ++iterator)
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, methodList)
 		{
-			class Method *method = static_cast<class Method*>(*iterator);
-			
+			const Method *method = boost::polymorphic_cast<Method*>(ref.second);
+
 			file << "\t\t\t<li>";
-			
+
 			if (method->isPublic())
 				file << "public ";
-			
+
 			if (method->isPrivate())
 				file << "private ";
-		
+
 			if (method->isStatic())
 				file << "static ";
-			
+
 			if (method->isConstant())
 				file << "constant ";
-			
+
 			if (method->isStub())
 				file << "stub ";
-			
-			file << (*iterator)->pageLink();
-			
-			
-			
+
+			file << method->pageLink();
+
 			file << "</li>\n";
 		}
-		
+
 		file << "\t\t</ul>\n";
 	}
 	else

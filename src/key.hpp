@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008, 2009 by Tamino Dauth                              *
+ *   Copyright (C) 2008 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -29,16 +29,11 @@ namespace vjassdoc
 class Key : public Keyword
 {
 	public:
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		Key(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
+		Key(class Parser *parser);
 
-		static void initClass();
-#endif
-		Key(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
 #ifdef SQLITE
-		Key(std::vector<const unsigned char*> &columnVector);
+		virtual const char* sqlTableName() const;
 #endif
 };
 

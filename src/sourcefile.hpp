@@ -36,7 +36,7 @@ class SourceFile : public Object
 
 		static void initClass();
 #endif
-		SourceFile(const std::string &identifier, const std::string &path);
+		SourceFile(class Parser *parser, const std::string &identifier, const std::string &path);
 #ifdef SQLITE
 		SourceFile(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -46,9 +46,9 @@ class SourceFile : public Object
 #ifdef SQLITE
 		virtual std::string sqlStatement() const;
 #endif
-		std::string path() const;
+		const std::string& path() const;
 		std::string lineLink(const unsigned int &line, const std::string &text) const;
-		
+
 		/**
 		* @param sourceFileName If this value is true, the name of source file will be shown as link. Otherwise the line will be shown.
 		*/
@@ -63,7 +63,7 @@ class SourceFile : public Object
 		std::string m_path;
 };
 
-inline std::string SourceFile::path() const
+inline const std::string& SourceFile::path() const
 {
 	return this->m_path;
 }
@@ -79,10 +79,10 @@ inline std::string SourceFile::sourceFileLineLink(const class Object *object, co
 {
 	if (object->sourceFile() == 0)
 		return identifier;
-	
+
 	if (sourceFileName)
 		return object->sourceFile()->lineLink(object->line(), object->sourceFile()->identifier());
-	
+
 	std::ostringstream sstream;
 	sstream << object->line();
 	return object->sourceFile()->lineLink(object->line(), sstream.str());

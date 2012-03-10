@@ -33,18 +33,28 @@ class FunctionPrototype;
 class Compiler
 {
 	public:
+		Compiler(class Vjassdoc *parent);
+
+		class Vjassdoc* parent() const;
+
 		void compile();
 
 	private:
-		void writeGlobals(std::fstream &fstream);
-		void writeMembers(std::fstream &fstream);
+		void writeGlobals(std::ostream &fstream);
+		void writeMembers(std::ostream &fstream);
 		/// Writes triggers of methods for TriggerEvaluate() and TriggerExecute().
-		void writeFunctionPrototypeGlobals(std::fstream &fstream);
-		void writeMethodPrototypeGlobals(std::fstream &fstream);
-		void writeLibraries(std::fstream &fstream);
+		void writeFunctionPrototypeGlobals(std::ostream &fstream);
+		void writeMethodPrototypeGlobals(std::ostream &fstream);
+		void writeLibraries(std::ostream &fstream);
 
+		class Vjassdoc *m_parent;
 		std::list<class FunctionPrototype*> m_prototypes;
 };
+
+inline Vjassdoc* Compiler::parent() const
+{
+	return this->m_parent;
+}
 
 }
 

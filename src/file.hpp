@@ -25,6 +25,8 @@
 #include <string>
 #include <fstream>
 
+#include "library.hpp"
+
 namespace vjassdoc
 {
 
@@ -163,7 +165,7 @@ class File
 		std::string removeFirstSpace(const std::string &line, std::string::size_type index) const;
 		void getTextMacro(const std::string &line, std::string::size_type &index, bool isOnce);
 		void getTextMacroInstance(const std::string &line, std::string::size_type &index);
-		std::list<std::string>* getLibraryRequirement(const std::string &line, std::string::size_type &index, std::list<bool> *optionalRequirement) const;
+		Library::RequirementsContainer* getLibraryRequirement(const std::string &line, std::string::size_type &index) const;
 		bool isInVjassBlock() const;
 		class Object* getCurrentContainer() const;
 

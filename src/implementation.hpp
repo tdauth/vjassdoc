@@ -32,9 +32,9 @@ class Module;
 class Implementation : public Object
 {
 	public:
-		struct UsesModule : public Parser::Comparator
+		struct UsesModule : public std::binary_function<const Implementation*, const Module*, bool>
 		{
-			virtual bool operator()(const class Implementation *thisImplementation, const class Module *module) const;
+			virtual bool operator()(const Implementation *thisImplementation, const Module *module) const;
 		};
 
 #ifdef SQLITE
@@ -44,7 +44,7 @@ class Implementation : public Object
 
 		static void initClass();
 #endif
-		Implementation(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Object *container, const std::string &moduleExpression, bool isOptional);
+		Implementation(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Object *container, const std::string &moduleExpression, bool isOptional);
 #ifdef SQLITE
 		Implementation(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -55,7 +55,7 @@ class Implementation : public Object
 		virtual std::string sqlStatement() const;
 #endif
 		virtual class Object* container() const;
-		std::string moduleExpression() const;
+		const std::string& moduleExpression() const;
 		class Module* module() const;
 		bool isOptional() const;
 
@@ -71,7 +71,7 @@ inline bool Implementation::UsesModule::operator()(const class Implementation *t
 	return thisImplementation->module() == module;
 }
 
-inline std::string Implementation::moduleExpression() const
+inline const std::string& Implementation::moduleExpression() const
 {
 	return this->m_moduleExpression;
 }

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008, 2009 by Tamino Dauth                              *
+ *   Copyright (C) 2008 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -27,6 +27,8 @@
 #include <list>
 
 #include <getopt.h>
+
+#include <boost/scoped_ptr.hpp>
 
 #include "internationalisation.hpp"
 #include "vjassdoc.hpp"
@@ -420,14 +422,13 @@ int main(int argc, char *argv[])
 	if (title.empty())
 		title = _("vJass API Documentation");
 
-	Vjassdoc::configure(jass, debug, parsePrivate, textmacros, functions, html, pages, specialPages, syntax, compileFilePath, databaseFilePath, verbose, time, alphabetical, parseObjectsOfList, title, dir, importDirs, filePaths, databases);
+	boost::scoped_ptr<Vjassdoc> program(new Vjassdoc(jass, debug, parsePrivate, textmacros, functions, html, pages, specialPages, syntax, compileFilePath, databaseFilePath, verbose, time, alphabetical, parseObjectsOfList, title, dir, importDirs, filePaths, databases));
 
 #ifdef SQLITE
-	Vjassdoc::initClasses();
+	program->initClasses();
 #endif
 
-	Vjassdoc::run();
-	Vjassdoc::clear();
+	program->run();
 
 	return EXIT_SUCCESS;
 }

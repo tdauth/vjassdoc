@@ -20,35 +20,22 @@
 
 #include <sstream>
 
+#include <boost/cast.hpp>
+#include <boost/foreach.hpp>
+
 #include "objects.hpp"
 #include "internationalisation.hpp"
 
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *TextMacro::sqlTableName = "TextMacros";
-unsigned int TextMacro::sqlColumns;
-std::string TextMacro::sqlColumnStatement;
-
-void TextMacro::initClass()
-{
-	TextMacro::sqlColumns = Object::sqlColumns + 2;
-	TextMacro::sqlColumnStatement = Object::sqlColumnStatement +
-	",IsOnce BOOLEAN"
-	",Parameters VARCHAR(255)";
-}
-#endif
-
-TextMacro::TextMacro(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &parameters) : Object(identifier, sourceFile, line, docComment), m_isOnce(isOnce), m_parameters(parameters)
+TextMacro::TextMacro(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &parameters) : Object(parser, identifier, sourceFile, line, docComment), m_isOnce(isOnce), m_parameters(parameters)
 {
 }
 
-#ifdef SQLITE
-TextMacro::TextMacro(std::vector<const unsigned char*> &columnVector) : Object(columnVector)
+TextMacro::TextMacro(class Parser *parser) : Object(parser), m_isOnce(false)
 {
 }
-#endif
 
 void TextMacro::init()
 {
@@ -80,15 +67,15 @@ void TextMacro::page(std::ofstream &file) const
 	<< "\t\t" << this->parameters() << '\n'
 	<< "\t\t<h2><a name=\"Instances\">" << _("Instances") << "</a></h2>\n"
 	;
-	std::list<class Object*> instanceList = Vjassdoc::parser()->getSpecificList(Parser::TextMacroInstances, TextMacroInstance::UsesTextMacro(), this);
+	Parser::SpecificObjectList instanceList = parser()->getSpecificList<TextMacroInstance::UsesTextMacro>(Parser::TextMacroInstances, this);
 
 	if (!instanceList.empty())
 	{
 		file << "\t\t<ul>\n";
 
-		for (std::list<class Object*>::iterator iterator = instanceList.begin(); iterator != instanceList.end(); ++iterator)
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, instanceList)
 		{
-			class TextMacroInstance *instance = static_cast<class TextMacroInstance*>(*iterator);
+			TextMacroInstance *instance = boost::polymorphic_cast<TextMacroInstance*>(ref.second);
 
 			file << "\t\t\t<li>";
 			file << Object::objectPageLink(instance->sourceFile()) << " - " << Object::objectPageLink(instance);
@@ -102,15 +89,41 @@ void TextMacro::page(std::ofstream &file) const
 }
 
 #ifdef SQLITE
-std::string TextMacro::sqlStatement() const
+const char* TextMacro::sqlTableName() const
 {
-	std::ostringstream sstream;
-	sstream
-	<< Object::sqlStatement() << ", "
-	<< "IsOnce=" << this->isOnce() << ", "
-	<< "Parameters=\"" << Object::sqlFilteredString(this->parameters()) << '\"';
+	return "TextMacros";
+}
 
-	return sstream.str();
+std::size_t TextMacro::sqlSize() const
+{
+	return vjassdoc::Object::sqlSize() + 2;
+}
+
+Object::SqlColumn TextMacro::sqlNames() const
+{
+	SqlColumn result = vjassdoc::Object::sqlNames();
+	result.push_back("IsOnce");
+	result.push_back("Parameters");
+
+	return result;
+}
+
+Object::SqlColumn TextMacro::sqlTypes() const
+{
+	SqlColumn result = vjassdoc::Object::sqlTypes();
+	result.push_back("BOOLEAN");
+	result.push_back("VARCHAR(255)");
+
+	return result;
+}
+
+Object::SqlColumn TextMacro::sqlValues() const
+{
+	SqlColumn result = vjassdoc::Object::sqlValues();
+	result.push_back(boost::lexical_cast<std::string>(this->isOnce()));
+	result.push_back(Object::sqlFilteredString(this->parameters()));
+
+	return result;
 }
 #endif
 

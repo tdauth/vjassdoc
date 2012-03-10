@@ -41,7 +41,7 @@ void Parameter::initClass()
 }
 #endif
 
-Parameter::Parameter(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class FunctionInterface *functionInterface, const std::string &typeExpression) : Object(identifier, sourceFile, line, docComment), m_functionInterface(functionInterface), m_typeExpression(typeExpression), m_type(0)
+Parameter::Parameter(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class FunctionInterface *functionInterface, const std::string &typeExpression) : Object(parser, identifier, sourceFile, line, docComment), m_functionInterface(functionInterface), m_typeExpression(typeExpression), m_type(0)
 {
 }
 
@@ -54,14 +54,14 @@ Parameter::Parameter(std::vector<const unsigned char*> &columnVector) : Object(c
 void Parameter::init()
 {
 	//Must not be empty.
-	this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Types);
-	
+	this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Types, this);
+
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Interfaces);
-	
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Interfaces, this);
+
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Structs);
-	
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Structs, this);
+
 	if (this->m_type != 0)
 		this->m_typeExpression.clear();
 }
@@ -101,7 +101,7 @@ std::string Parameter::sqlStatement() const
 	<< "FunctionInterface=" << Object::objectId(this->functionInterface()) << ", "
 	<< "TypeExpression=\"" << this->typeExpression() << "\", "
 	<< "Type=" << Object::objectId(this->type());
-	
+
 	return sstream.str();
 }
 #endif

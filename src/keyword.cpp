@@ -26,28 +26,53 @@
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Keyword::sqlTableName = "Keywords";
-unsigned int Keyword::sqlColumns;
-std::string Keyword::sqlColumnStatement;
-
-void Keyword::initClass()
+Keyword::Keyword(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate) : Object(parser, identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate)
 {
-	Keyword::sqlColumns = Object::sqlColumns + 3;
-	Keyword::sqlColumnStatement = Object::sqlColumnStatement +
-	",Library INT,"
-	"Scope INT, "
-	"IsPrivate BOOLEAN";
 }
-#endif
 
-Keyword::Keyword(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate) : Object(identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate)
+Keyword::Keyword(Parser *parser) : Object(parser), m_library(0)
 {
 }
 
 #ifdef SQLITE
-Keyword::Keyword(std::vector<const unsigned char*> &columnVector) : Object(columnVector), m_library(0)
+const char* Keyword::sqlTableName() const
 {
+	return "Keywords";
+}
+
+std::size_t Keyword::sqlSize() const
+{
+	return vjassdoc::Object::sqlSize() + 3;
+}
+
+Object::SqlColumn Keyword::sqlNames() const
+{
+	SqlColumn result = Object::sqlNames();
+	result.push_back("Library");
+	result.push_back("Scope");
+	result.push_back("IsPrivate");
+
+	return result;
+}
+
+Object::SqlColumn Keyword::sqlTypes() const
+{
+	SqlColumn result = Object::sqlTypes();
+	result.push_back("INT");
+	result.push_back("INT");
+	result.push_back("BOOLEAN");
+
+	return result;
+}
+
+Object::SqlColumn Keyword::sqlValues() const
+{
+	SqlColumn result = Object::sqlValues();
+	result.push_back(objectIdString(this->library()));
+	result.push_back(objectIdString(this->scope()));
+	result.push_back(boost::lexical_cast<std::string>(this->isPrivate()));
+
+	return result;
 }
 #endif
 
@@ -83,20 +108,6 @@ void Keyword::page(std::ofstream &file) const
 	<< "\t\t" << Object::showBooleanProperty(this->isPrivate()) << "\n"
 	;
 }
-
-#ifdef SQLITE
-std::string Keyword::sqlStatement() const
-{
-	std::stringstream sstream;
-	sstream
-	<< Object::sqlStatement() << ", "
-	<< "Library=" << Object::objectId(this->library()) << ", "
-	<< "Scope=" << Object::objectId(this->scope()) << ", "
-	<< "IsPrivate=" << this->isPrivate();
-	
-	return sstream.str();
-}
-#endif
 
 class Library* Keyword::library() const
 {

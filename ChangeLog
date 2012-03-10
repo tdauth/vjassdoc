@@ -1,3 +1,22 @@
+2012-03-10 Tamino Dauth <tamino@cdauth.de>
+* Parser::getSpecificList() is template-based now which improves type-safety.
+* Added class Library::Requirement.
+* Added const version of Parser::getList().
+* Parser::getList() is public now.
+* Replaced Parser::getSpecificList() function calls with Parser::Comparator by direct Parser::getList() calls.
+* Defined Object::IdType as uint64_t.
+
+2012-03-04 Tamino Dauth <tamino@cdauth.de>
+* Removed linear search for imported files (will be added by the File instance itself now).
+* Fixed further non-reference usage of Parser::getList().
+* Revised SQLite support and dropped static functions.
+
+2012-03-02 Tamino Dauth <tamino@cdauth.de>
+* Dropped static linking and instance of vjassdoc::Vjassdoc.
+* Improved performance by passing more references.
+* Dropped class vjassdoc::gui::Application.
+* Fixed settings values for GUI.
+
 2012-02-20 Tamino Dauth <tamino@cdauth.de>
 * Revised everything and fixed old bugs:
 * GUI supports now proper file selection via buttons and URL completion via line edit.

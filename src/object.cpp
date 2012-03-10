@@ -21,11 +21,13 @@
 #include <sstream>
 #include <cstdlib>
 #include <cctype>
-#include <iostream> //debug
+
+#include <boost/cast.hpp>
 
 #include "objects.hpp"
 #include "sourcefile.hpp"
 #include "doccomment.hpp"
+#include "parser.hpp"
 #include "vjassdoc.hpp"
 #include "internationalisation.hpp"
 #include "file.hpp"
@@ -33,46 +35,36 @@
 namespace vjassdoc
 {
 
-unsigned int Object::sqlColumns;
-std::string Object::sqlColumnStatement;
-Object::IdType Object::m_maxIds = 0;
-
-void Object::initClass()
-{
-	Object::sqlColumns = 4;
-	Object::sqlColumnStatement =
-	"Identifier VARCHAR(255),"
-	"SourceFile INT,"
-	"Line INT,"
-	"DocComment INT";
-}
-
 #ifdef SQLITE
 std::string Object::sqlFilteredString(const std::string &usedString)
 {
-	std::string result;
-	
+	std::ostringstream result;
+	// TODO set buffer size to usedString.length() + 2
+	result << "\"";
+
 	for (std::string::size_type i = 0; i < usedString.length(); ++i)
 	{
 		char character = usedString[i];
-		
+
 		switch (character)
 		{
 			case '\'':
-				result += "\'\'";
+				result << "\'\'";
 				break;
-			
+
 			case '\"':
-				result += "\"\"";
+				result << "\"\"";
 				break;
-			
+
 			default:
-				result += character;
+				result << character;
 				break;
 		}
 	}
 
-	return result;
+	result << "\"";
+
+	return result.str();
 }
 
 std::string Object::sqlTableHeader(const std::string &tableName, const std::string &entries)
@@ -81,49 +73,92 @@ std::string Object::sqlTableHeader(const std::string &tableName, const std::stri
 }
 #endif
 
-Object::Object(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment) : m_container(0), m_scope(0), m_library(0), m_id(m_maxIds), m_identifier(identifier), m_sourceFile(sourceFile), m_line(line), m_docComment(docComment)
+Object::Object(Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment) : m_container(0), m_scope(0), m_library(0), m_id(parser->nextId()), m_parser(parser), m_identifier(identifier), m_sourceFile(sourceFile), m_line(line), m_docComment(docComment)
 {
-	++m_maxIds;
-	
 	if (docComment != 0)
 		docComment->setObject(this);
 }
 
-#ifdef SQLITE
-Object::Object(std::vector<Object::VectorDataType> &columnVector) :  m_container(0), m_scope(0), m_library(0), m_sourceFile(0), m_docComment(0), m_columnVector(columnVector)
+Object::Object(Parser *parser) :  m_container(0), m_scope(0), m_library(0), m_sourceFile(0), m_docComment(0), m_parser(parser)
 {
 }
-#endif
 
 Object::~Object()
 {
 }
 
 #ifdef SQLITE
-void Object::initByVector()
+std::size_t Object::sqlSize() const
 {
-	this->m_sourceFile = static_cast<class SourceFile*>(Vjassdoc::parser()->searchObjectInLastDatabase(atoi((const char*)this->m_columnVector[0])));
-	this->m_docComment = static_cast<class DocComment*>(Vjassdoc::parser()->searchObjectInLastDatabase(atoi((const char*)this->m_columnVector[1])));
-	
-	//drop elements
-	
-	if (this->m_docComment != 0)
-		this->m_docComment->setObject(this);
+	return 4;
 }
 
-void Object::clearVector()
+Object::SqlColumn Object::sqlColumn() const
 {
-	this->m_columnVector.clear();
+	SqlColumn result;
+	result.reserve(sqlSize());
+
+	return result;
+}
+
+Object::SqlColumn Object::sqlNames() const
+{
+	SqlColumn result = sqlColumn();
+	result.push_back("Identifier");
+	result.push_back("SourceFile");
+	result.push_back("Line");
+	result.push_back("DocComment");
+
+	return result;
+}
+
+Object::SqlColumn Object::sqlTypes() const
+{
+	SqlColumn result = sqlColumn();
+	result.push_back("VARCHAR(255)");
+	result.push_back("INT");
+	result.push_back("INT");
+	result.push_back("INT");
+
+	return result;
+}
+
+Object::SqlColumn Object::sqlValues() const
+{
+	SqlColumn result = sqlColumn();
+	result.push_back(sqlFilteredString(this->identifier()));
+	result.push_back(this->objectIdString(this->sourceFile()));
+	result.push_back(boost::lexical_cast<std::string>(this->line()));
+	result.push_back(this->objectIdString(this->docComment()));
+
+	return result;
+}
+
+void Object::initBySql(const SqlColumn &column)
+{
+	this->m_id = boost::lexical_cast<Parser::IdType>(column[0]);
+	this->m_identifier = column[1];
+	this->m_line = boost::lexical_cast<Parser::IdType>(column[2]);
+	const Parser::IdType sourceFileId = boost::lexical_cast<Parser::IdType>(column[3]);
+	this->m_sourceFile = boost::polymorphic_cast<class SourceFile*>(this->parser()->searchObjectInLastDatabase(sourceFileId));
+	const Parser::IdType docCommentId = boost::lexical_cast<Parser::IdType>(column[4]);
+	this->m_docComment = boost::polymorphic_cast<class DocComment*>(this->parser()->searchObjectInLastDatabase(docCommentId));
+
+	if (this->m_docComment != 0)
+		this->m_docComment->setObject(this);
 }
 
 std::string Object::sqlStatement() const
 {
 	std::ostringstream sstream;
-	sstream
-	<< "Identifier=\"" << Object::sqlFilteredString(this->identifier()) << "\", "
-	<< "SourceFile=" << Object::objectId(this->sourceFile()) << ", "
-	<< "Line=" << this->line() << ", "
-	<< "DocComment=" << Object::objectId(this->docComment());
+
+	for (std::size_t i = 0; i < sqlSize(); ++i)
+	{
+		sstream << sqlNames()[i] << "=" << sqlValues()[i];
+
+		if (i < sqlSize() - 1)
+			sstream << ",";
+	}
 
 	return sstream.str();
 }
@@ -164,47 +199,47 @@ bool Object::hasToSearchValueObject(class Object *type, const std::string &expre
 {
 	if (type == 0)
 		return false;
-	
+
 	if (dynamic_cast<class Type*>(type) != 0)
 	{
 		do
 		{
-			if (type == Vjassdoc::parser()->integerType())
+			if (type == type->parser()->integerType())
 			{
 				if (isdigit(expression[0]) || expression[0] == '-' || expression[0] == '+')
 					return false;
-				
+
 				return true;
 			}
-			else if (type == Vjassdoc::parser()->realType())
+			else if (type == type->parser()->realType())
 			{
 				if (isdigit(expression[0]) || expression[0] == '-' || expression[0] == '+' || expression[0] == '.')
 					return false;
-				
+
 				return true;
 			}
-			else if (type == Vjassdoc::parser()->stringType())
+			else if (type == type->parser()->stringType())
 			{
 				if (expression[0] == '\"' || expression == "null")
 					return false;
-				
+
 				return true;
 			}
-			else if (type == Vjassdoc::parser()->booleanType())
+			else if (type == type->parser()->booleanType())
 			{
 				if (expression == "true" || expression == "false")
 					return false;
-				
+
 				return true;
 			}
-			else if (type == Vjassdoc::parser()->handleType() || type == Vjassdoc::parser()->codeType()) /// @todo Code type == null?!
+			else if (type == type->parser()->handleType() || type == type->parser()->codeType()) /// @todo Code type == null?!
 			{
 				if (expression == "null")
 					return false;
-				
+
 				return true;
 			}
-			
+
 			type = static_cast<class Type*>(type)->type();
 		}
 		while (type != 0);
@@ -213,7 +248,7 @@ bool Object::hasToSearchValueObject(class Object *type, const std::string &expre
 	{
 		if (isdigit(expression[0]) || expression[0] == '-' || expression[0] == '+')
 			return false;
-		
+
 		return true;
 	}
 
@@ -227,7 +262,7 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 	if (!valueExpression.empty())
 	{
 		//std::cout << "Before has to search." << std::endl;
-		
+
 		//FIXME The value can be a function or method call with literal arguments.
 		if (Object::hasToSearchValueObject(type, valueExpression))
 		{
@@ -235,13 +270,13 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 			//FIXME Detect . separators correctly.
 			class Object *valueContainer = 0;
 			std::string::size_type separatorPosition = valueExpression.find('.');
-			
+
 			if (separatorPosition != std::string::npos)
 			{
 				//std::cout << "Found . in value expression at position " << separatorPosition << std::endl;
 				std::string containerIdentifier = valueExpression.substr(0, separatorPosition);
 				//std::cout << "Container identifier: " << containerIdentifier << std::endl;
-				
+
 				if (containerIdentifier == File::expressionText[File::ThistypeExpression])
 				{
 					valueContainer = this->container();
@@ -253,29 +288,29 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 					//valueContainer = static_cast<class Struct*>(this->container())->extension();
 					std::cout << "super" << std::endl;
 				}
-				
+
 				//FIXME, does not work
 				valueExpression.erase(separatorPosition);
 				//std::cout << "New value expression " << valueExpression << std::endl;
 				//std::cout << "New position " << separatorPosition << std::endl;
 			}
-			
+
 			//FIXME Detect _ separators correctly?!
-			
+
 			bool functionCall = false;
 			std::string::size_type position = valueExpression.find('(');
-			
+
 			if (position != std::string::npos)
 				functionCall = true;
 			else
 				position = valueExpression.find('[');
-			
+
 			std::string newExpression;
-			
+
 			if (functionCall || position != std::string::npos)
 			{
 				newExpression = valueExpression.substr(0, position);
-				
+
 				if (!functionCall)
 				{
 					valueExpression = valueExpression.substr(position + 1);
@@ -286,40 +321,39 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 			}
 			else
 				newExpression = valueExpression;
-			
+
 			if (functionCall)
 			{
 				//std::cout << "Is function call " << std::endl;
-				
+
 				//methods only
 				if (valueContainer != 0)
 				{
 					//std::cout << "with value container." << std::endl;
-					std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Methods, Object::IsInContainer(), valueContainer);
+					Parser::SpecificObjectList list = parser()->getSpecificList<IsInContainer>(Parser::Methods, valueContainer);
 					value = Parser::searchObjectInCustomList(list, newExpression);
 				}
 				//functions only
 				else
 				{
 					//std::cout << "Has no container " << std::endl;
-					value = this->searchObjectInList(newExpression, Parser::Functions);
+					value = this->parser()->searchObjectInList(newExpression, Parser::Functions, this);
 					//std::cout << "Value = " << value << std::endl;
 				}
 			}
 			else
 			{
-				//members only
+				// members only
 				if (valueContainer != 0)
 				{
-
-					std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Members, Object::IsInContainer(), valueContainer);
+					Parser::SpecificObjectList list = parser()->getSpecificList<IsInContainer>(Parser::Members, valueContainer);
 					value = Parser::searchObjectInCustomList(list, newExpression);
 				}
-				//globals only
+				// globals only
 				else
-					value = this->searchObjectInList(newExpression, Parser::Globals);
+					value = this->parser()->searchObjectInList(newExpression, Parser::Globals, this);
 			}
-			
+
 			if (position == std::string::npos && value == 0)
 				valueExpression.clear();
 		}
@@ -328,22 +362,18 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 	}
 	else
 		valueExpression = '-';
-	
+
 	return value;
 }
 
-#ifdef SQLITE
-void Object::prepareVector()
+std::string Object::anchor() const
 {
-	this->m_id = atoi((const char*)this->m_columnVector.front());
-	this->m_columnVector.erase(this->m_columnVector.begin()); //drop element
-	
-	this->m_identifier = (const char*)(this->m_columnVector.front());
-	this->m_columnVector.erase(this->m_columnVector.begin()); //drop element
-	
-	this->m_line = atoi((const char*)this->m_columnVector[1]);
-	this->m_columnVector.erase(this->m_columnVector.begin() + 1); //drop element
+	std::ostringstream sstream;
+
+	if (parser()->parent()->optionPages())
+		return this->pageLink();
+
+	return this->m_identifier;
 }
-#endif
 
 }

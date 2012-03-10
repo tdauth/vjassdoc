@@ -38,7 +38,7 @@ class DocComment : public Object
 
 		static void initClass();
 #endif
-		DocComment(const std::string &identifier, class SourceFile *sourceFile, unsigned int line);
+		DocComment(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line);
 #ifdef SQLITE
 		DocComment(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -49,11 +49,11 @@ class DocComment : public Object
 		virtual std::string sqlStatement() const;
 #endif
 		void setObject(class Object *object); //Just used by the Object class.
-		std::string briefDescription() const;
+		const std::string& briefDescription() const;
 		class Object *object() const;
-		std::list<std::string> authors() const;
-		std::list<class Object*> seeObjects() const;
-		std::list<std::string> todos() const;
+		const std::list<std::string>& authors() const;
+		const std::list<class Object*>& seeObjects() const;
+		const std::list<std::string>& todos() const;
 
 	protected:
 		enum Keyword
@@ -204,7 +204,7 @@ inline void DocComment::setObject(class Object *object)
 	this->m_object = object;
 }
 
-inline std::string DocComment::briefDescription() const
+inline const std::string& DocComment::briefDescription() const
 {
 	return this->m_briefDescription;
 }
@@ -214,17 +214,17 @@ inline class Object* DocComment::object() const
 	return this->m_object;
 }
 
-inline std::list<std::string> DocComment::authors() const
+inline const std::list<std::string>& DocComment::authors() const
 {
 	return this->m_authors;
 }
 
-inline std::list<class Object*> DocComment::seeObjects() const
+inline const std::list<class Object*>& DocComment::seeObjects() const
 {
 	return this->m_seeObjects;
 }
 
-inline std::list<std::string> DocComment::todos() const
+inline const std::list<std::string>& DocComment::todos() const
 {
 	return this->m_todos;
 }

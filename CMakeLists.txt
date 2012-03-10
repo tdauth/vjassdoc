@@ -8,7 +8,7 @@ set(vjassdoc_VERSION_MINOR 4)
 set(vjassdoc_VERSION "${vjassdoc_VERSION_MAJOR}.${vjassdoc_VERSION_MINOR}")
 
 # configure a header file to pass some of the CMake settings
-# to the source code
+# to the source codeB
 configure_file (
 	"${PROJECT_SOURCE_DIR}/vjassdocConfig.h.in"
 	"${PROJECT_BINARY_DIR}/vjassdocConfig.h"
@@ -43,26 +43,6 @@ find_package(Boost REQUIRED)
 
 if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
-endif ()
-
-# setup flags
-
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-	add_definitions(-DDEBUG=1)
-	message(STATUS "Build type is \"Debug\", using -DDEBUG.")
-endif ()
-
-if (GUI)
-	find_package(Qt4 REQUIRED)
-	find_package(KDE4 REQUIRED)
-
-	if (QT4_FOUND AND KDE4_FOUND)
-		include(${QT_USE_FILE})
-		add_definitions(${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
-		#add_definitions(-DQT_STL)
-		link_directories(${KDE4_LIB_DIR})
-		include_directories(${KDE4_INCLUDE_DIR} ${KDE4_INCLUDES} ${QT_INCLUDE_DIR})
-	endif ()
 endif ()
 
 if (SQLITE)

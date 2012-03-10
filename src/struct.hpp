@@ -31,9 +31,9 @@ namespace vjassdoc
 class Struct : public Interface
 {
 	public:
-		struct HasExtension : public Parser::Comparator
+		struct HasExtension : public std::binary_function<const Struct*, const Interface*, bool>
 		{
-			virtual bool operator()(const class Object *thisObject, const class Object *extension) const;
+			virtual bool operator()(const Struct *thisObject, const Interface *extension) const;
 		};
 
 #ifdef SQLITE
@@ -43,7 +43,7 @@ class Struct : public Interface
 
 		static void initClass();
 #endif
-		Struct(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, const std::string &sizeExpression, const std::string &extensionExpression);
+		Struct(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, const std::string &sizeExpression, const std::string &extensionExpression);
 #ifdef SQLITE
 		Struct(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -54,9 +54,9 @@ class Struct : public Interface
 		virtual std::string sqlStatement() const;
 #endif
 		class Object* size() const;
-		std::string sizeExpression() const;
+		const std::string& sizeExpression() const;
 		class Interface* extension() const;
-		std::string extensionExpression() const;
+		const std::string& extensionExpression() const;
 		class Method* constructor() const;
 		class Method* destructor() const;
 		class Method *initializer() const;
@@ -78,7 +78,7 @@ inline class Object* Struct::size() const
 	return this->m_size;
 }
 
-inline std::string Struct::sizeExpression() const
+inline const std::string& Struct::sizeExpression() const
 {
 	return this->m_sizeExpression;
 }
@@ -88,7 +88,7 @@ inline class Interface* Struct::extension() const
 	return this->m_extension;
 }
 
-inline std::string Struct::extensionExpression() const
+inline const std::string& Struct::extensionExpression() const
 {
 	return this->m_extensionExpression;
 }

@@ -39,13 +39,13 @@ void Call::initClass()
 	",FunctionIdentifier VARCHAR(255)"
 	",Function INT";
 	std::ostringstream sstream;
-	
+
 	for (int i = 0; i < Call::maxArguments; ++i)
 		sstream << ",ArgumentIdentifier" << i << " VARCHAR(255)";
-	
+
 	for (int i = 0; i < Call::maxArguments; ++i)
 		sstream << ",Argument" << i << " INT";
-	
+
 	Call::sqlColumnStatement += sstream.str();
 	Call::sqlColumnStatement +=
 	",IsExecuted BOOLEAN"
@@ -54,7 +54,7 @@ void Call::initClass()
 }
 #endif
 
-Call::Call(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionIdentifier, std::list<std::string> *argumentIdentifiers, bool isExecuted, bool isEvaluated) : Object(identifier, sourceFile, line, docComment), m_functionIdentifier(functionIdentifier), m_function(0), m_argumentIdentifiers(argumentIdentifiers), m_arguments(0), m_isExecuted(isExecuted), m_isEvaluated(isEvaluated)
+Call::Call(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionIdentifier, std::list<std::string> *argumentIdentifiers, bool isExecuted, bool isEvaluated) : Object(parser, identifier, sourceFile, line, docComment), m_functionIdentifier(functionIdentifier), m_function(0), m_argumentIdentifiers(argumentIdentifiers), m_arguments(0), m_isExecuted(isExecuted), m_isEvaluated(isEvaluated)
 {
 }
 
@@ -69,41 +69,41 @@ Call::~Call()
 {
 	if (this->m_argumentIdentifiers != 0)
 		delete this->m_argumentIdentifiers;
-	
+
 	if (this->m_arguments != 0)
 		delete this->m_arguments;
 }
 
 void Call::init()
 {
-	this->m_function = static_cast<class Function*>(this->searchObjectInList(this->m_functionIdentifier, Parser::Functions));
-	
+	this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Functions, this));
+
 	if (this->m_function == 0)
-		this->m_function = static_cast<class Function*>(this->searchObjectInList(this->m_functionIdentifier, Parser::Methods));
-	
+		this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Methods, this));
+
 	if (this->m_function != 0)
 		this->m_functionIdentifier.clear();
-	
+
 	this->m_arguments = new std::list<class Object*>;
-	
+
 	bool foundAll = true;
-	
+
 	for (std::list<std::string>::const_iterator iterator = this->m_argumentIdentifiers->begin(); iterator != this->m_argumentIdentifiers->end(); ++iterator)
 	{
-		class Object *object = this->searchObjectInList(*iterator, Parser::Locals);
-		
+		class Object *object = this->parser()->searchObjectInList(*iterator, Parser::Locals, this);
+
 		/// @todo Call arguments can be many different Object child classes.
-		
+
 		if (object == 0)
 			foundAll = false;
 	}
-	
+
 	if (foundAll)
 	{
 		delete this->m_argumentIdentifiers;
 		this->m_argumentIdentifiers = 0;
 	}
-		
+
 }
 
 void Call::pageNavigation(std::ofstream &file) const
@@ -141,18 +141,18 @@ std::string Call::sqlStatement() const
 	<< "Function=" << Object::objectId(this->m_function) << ", "
 	;
 	int i = 0;
-	
+
 	for (std::list<std::string>::const_iterator iterator = this->m_argumentIdentifiers->begin(); iterator != this->m_argumentIdentifiers->end() && i < Call::maxArguments; ++iterator, ++i)
 		sstream << ", ArgumentIdentifier" << i << ' ' << *iterator;
-	
+
 	for ( ; i < Call::maxArguments; ++i)
-		sstream << ", ArgumentIdentifier" << i << " NULL"; 
-	
+		sstream << ", ArgumentIdentifier" << i << " NULL";
+
 	i = 0;
-	
+
 	for (std::list<class Object*>::const_iterator iterator = this->m_arguments->begin(); iterator != this->m_arguments->end() && i < Call::maxArguments; ++iterator, ++i)
 		sstream << ",Argument" << i << ' ' << (*iterator)->id();
-	
+
 	sstream
 	<< ",IsExecuted " << this->m_isExecuted
 	<< ",IsEvaluated " << this->m_isEvaluated

@@ -29,23 +29,19 @@ namespace vjassdoc
 class Keyword : public Object
 {
 	public:
+		Keyword(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
+		Keyword(class Parser *parser);
 #ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
-
-		static void initClass();
-#endif
-		Keyword(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
-#ifdef SQLITE
-		Keyword(std::vector<const unsigned char*> &columnVector);
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		virtual void init();
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
-#ifdef SQLITE
-		virtual std::string sqlStatement() const;
-#endif
+
 		virtual class Library* library() const;
 		virtual class Scope* scope() const;
 		bool isPrivate() const;

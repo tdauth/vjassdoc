@@ -21,12 +21,13 @@
 #ifndef VJASSDOC_GUI_WIDGET_HPP
 #define VJASSDOC_GUI_WIDGET_HPP
 
-#include <QObject>
 #include <QWidget>
 
-#include <KDialog>
+#include <KAboutData>
+#include <KAboutApplicationDialog>
 
 #include "ui_widget.h"
+#include "../vjassdoc.hpp"
 
 namespace vjassdoc
 {
@@ -43,10 +44,19 @@ class Widget : public QWidget, Ui::Widget
 		void selectFile();
 		void selectImportDirectory();
 		void selectDatabase();
+		void showAbout();
 
 	public:
-		Widget(class MainWindow *parent);
+		Widget(const KAboutData &about, class MainWindow *parent);
 		~Widget();
+
+		virtual void readSettings();
+		virtual void writeSettings();
+
+	private:
+		KAboutData m_about;
+		KAboutApplicationDialog *m_aboutDialog;
+		QScopedPointer<vjassdoc::Vjassdoc> m_app;
 };
 
 }

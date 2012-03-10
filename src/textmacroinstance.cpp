@@ -20,44 +20,29 @@
 
 #include <sstream>
 
+#include <boost/cast.hpp>
+
 #include "objects.hpp"
 #include "internationalisation.hpp"
 
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *TextMacroInstance::sqlTableName = "TextMacroInstances";
-unsigned int TextMacroInstance::sqlColumns;
-std::string TextMacroInstance::sqlColumnStatement;
-
-void TextMacroInstance::initClass()
-{
-	TextMacroInstance::sqlColumns = TextMacro::sqlColumns + 2;
-	TextMacroInstance::sqlColumnStatement = TextMacro::sqlColumnStatement +
-	",TextMacro INT,"
-	"IsOptional BOOLEAN"
-	;
-}
-#endif
-
-TextMacroInstance::TextMacroInstance(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOptional, const std::string &arguments) : TextMacro(identifier, sourceFile, line, docComment, false, arguments), m_textMacro(0), m_isOptional(isOptional) /// isOnce of @class TextMacro is unnecessary
+TextMacroInstance::TextMacroInstance(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOptional, const std::string &arguments) : TextMacro(parser, identifier, sourceFile, line, docComment, false, arguments), m_textMacro(0), m_isOptional(isOptional) /// isOnce of @class TextMacro is unnecessary
 {
 }
 
-#ifdef SQLITE
-TextMacroInstance::TextMacroInstance(std::vector<const unsigned char*> &columnVector) : TextMacro(columnVector), m_textMacro(0)
+TextMacroInstance::TextMacroInstance(Parser *parser) : TextMacro(parser), m_textMacro(0)
 {
 	/// @todo m_isOptional
 }
-#endif
 
 void TextMacroInstance::init()
 {
 	TextMacro::init();
 
-	//mustn't be empty
-	this->m_textMacro = static_cast<class TextMacro*>(this->searchObjectInList(this->identifier(), Parser::TextMacros));
+	// mustn't be empty
+	this->m_textMacro = boost::polymorphic_cast<class TextMacro*>(this->parser()->searchObjectInList(this->identifier(), Parser::TextMacros, this));
 }
 
 void TextMacroInstance::pageNavigation(std::ofstream &file) const
@@ -91,16 +76,41 @@ void TextMacroInstance::page(std::ofstream &file) const
 }
 
 #ifdef SQLITE
-std::string TextMacroInstance::sqlStatement() const
+const char* TextMacroInstance::sqlTableName() const
 {
-	std::ostringstream sstream;
-	sstream
-	<< TextMacro::sqlStatement() << ", "
-	<< "TextMacro=" << Object::objectId(this->textMacro()) << ", "
-	<< "IsOptional=" << this->isOptional()
-	;
+	return "TextMacroInstances";
+}
 
-	return sstream.str();
+std::size_t TextMacroInstance::sqlSize() const
+{
+	return TextMacro::sqlSize() + 2;
+}
+
+Object::SqlColumn TextMacroInstance::sqlNames() const
+{
+	SqlColumn result = TextMacro::sqlNames();
+	result.push_back("TextMacro");
+	result.push_back("IsOptional");
+
+	return result;
+}
+
+Object::SqlColumn TextMacroInstance::sqlTypes() const
+{
+	SqlColumn result = TextMacro::sqlTypes();
+	result.push_back("INT");
+	result.push_back("BOOLEAN");
+
+	return result;
+}
+
+Object::SqlColumn TextMacroInstance::sqlValues() const
+{
+	SqlColumn result = TextMacro::sqlValues();
+	result.push_back(Object::objectIdString(this->textMacro()));
+	result.push_back(boost::lexical_cast<std::string>(this->isOptional()));
+
+	return result;
 }
 #endif
 

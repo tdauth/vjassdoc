@@ -21,41 +21,27 @@
 #include <cctype>
 #include <sstream>
 
+#include <boost/cast.hpp>
+
 #include "objects.hpp"
 #include "internationalisation.hpp"
 
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Type::sqlTableName = "Types";
-unsigned int Type::sqlColumns;
-std::string Type::sqlColumnStatement;
-
-void Type::initClass()
-{
-	Type::sqlColumns = Object::sqlColumns + 2;
-	Type::sqlColumnStatement = Object::sqlColumnStatement +
-	",Type INT,"
-	"Size INT";
-}
-#endif
-
-Type::Type(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &typeExpression, const std::string &sizeExpression) : typeExpression(typeExpression), sizeExpression(sizeExpression), m_type(0), m_size(0), Object(identifier, sourceFile, line, docComment)
+Type::Type(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &typeExpression, const std::string &sizeExpression) : typeExpression(typeExpression), sizeExpression(sizeExpression), m_type(0), m_size(0), Object(parser, identifier, sourceFile, line, docComment)
 {
 }
 
-#ifdef SQLITE
-Type::Type(std::vector<const unsigned char*> &columnVector) : m_type(0), m_size(0), Object(columnVector)
+Type::Type(Parser *parser) : m_type(0), m_size(0), Object(parser)
 {
 }
-#endif
 
 void Type::init()
 {
 	if (!this->typeExpression.empty())
 	{
-		this->m_type = static_cast<Type*>(this->searchObjectInList(this->typeExpression, Parser::Types));
+		this->m_type = boost::polymorphic_cast<Type*>(this->parser()->searchObjectInList(this->typeExpression, Parser::Types));
 
 		if (this->m_type != 0)
 			this->typeExpression.clear();
@@ -72,16 +58,16 @@ void Type::init()
 	if (isdigit(this->sizeExpression[0])) //expression can be an integer like 43
 		return;
 
-	this->m_size = this->searchObjectInList(this->sizeExpression, Parser::Globals);
+	this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Globals, this);
 
 	if (this->m_size == 0)
-		this->m_size = this->searchObjectInList(this->sizeExpression, Parser::Members);
+		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Members, this);
 
 	if (this->m_size == 0)
-		this->m_size = this->searchObjectInList(this->sizeExpression, Parser::Functions);
+		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Functions, this);
 
 	if (this->m_size == 0)
-		this->m_size = this->searchObjectInList(this->sizeExpression, Parser::Methods);
+		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Methods, this);
 
 	if (this->m_size != 0)
 		this->sizeExpression.clear();
@@ -114,15 +100,41 @@ void Type::page(std::ofstream &file) const
 }
 
 #ifdef SQLITE
-std::string Type::sqlStatement() const
+const char* Type::sqlTableName() const
 {
-	std::ostringstream sstream;
-	sstream
-	<< Object::sqlStatement() << ", "
-	<< "Type=" << Object::objectId(this->type()) << ", "
-	<< "Size=" << Object::objectId(this->size());
+	return "Types";
+}
 
-	return sstream.str();
+std::size_t Type::sqlSize() const
+{
+	return Object::sqlSize() + 2;
+}
+
+Object::SqlColumn Type::sqlNames() const
+{
+	SqlColumn result = Object::sqlNames();
+	result.push_back("Type");
+	result.push_back("Size");
+
+	return result;
+}
+
+Object::SqlColumn Type::sqlTypes() const
+{
+	SqlColumn result = Object::sqlTypes();
+	result.push_back("INT");
+	result.push_back("INT");
+
+	return result;
+}
+
+Object::SqlColumn Type::sqlValues() const
+{
+	SqlColumn result = Object::sqlValues();
+	result.push_back(objectIdString(this->type()));
+	result.push_back(objectIdString(this->size()));
+
+	return result;
 }
 #endif
 

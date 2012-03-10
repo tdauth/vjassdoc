@@ -20,7 +20,9 @@
 
 #include <cstdio>
 #include <iostream>
+
 #include <boost/tokenizer.hpp>
+#include <boost/foreach.hpp>
 
 #include "vjassdoc.hpp"
 #include "internationalisation.hpp"
@@ -30,20 +32,24 @@
 namespace vjassdoc
 {
 
+Compiler::Compiler(Vjassdoc* parent) : m_parent(parent)
+{
+}
+
 void Compiler::compile()
 {
-	std::fstream fstream(Vjassdoc::optionCompile().c_str());
+	std::fstream fstream(parent()->optionCompile().c_str());
 
 	if (!fstream.good())
 	{
-		if (Vjassdoc::optionVerbose())
-			fprintf(stderr, _("Error while opening or creating file \"%s\" for compilation process.\n"), Vjassdoc::optionCompile().c_str());
+		if (parent()->optionVerbose())
+			fprintf(stderr, _("Error while opening or creating file \"%s\" for compilation process.\n"), parent()->optionCompile().c_str());
 
 		return;
 	}
 
-	if (Vjassdoc::optionVerbose())
-		fprintf(stderr, _("Opening or creating file \"%s\" for compilation process.\n"), Vjassdoc::optionCompile().c_str());
+	if (parent()->optionVerbose())
+		fprintf(stderr, _("Opening or creating file \"%s\" for compilation process.\n"), parent()->optionCompile().c_str());
 
 	fstream << "globals" << std::endl;
 	this->writeGlobals(fstream);
@@ -55,16 +61,16 @@ void Compiler::compile()
 	fstream.close();
 }
 
-void Compiler::writeGlobals(std::fstream &fstream)
+void Compiler::writeGlobals(std::ostream &fstream)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Writing globals.") << std::endl;
 
-	std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Globals, Parser::Comparator());
+	const Parser::ObjectList &list = parent()->parser()->getList(Parser::Globals);
 
-	for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
+	for (Parser::ObjectList::const_iterator iterator = list.begin(); iterator != list.end(); ++iterator)
 	{
-		class Global *global = static_cast<class Global*>(*iterator);
+		const Global *global = boost::polymorphic_cast<const Global*>(iterator->second);
 
 		if (global->type() != 0)
 			fstream << global->type()->identifier();
@@ -84,16 +90,16 @@ void Compiler::writeGlobals(std::fstream &fstream)
 	}
 }
 
-void Compiler::writeMembers(std::fstream &fstream)
+void Compiler::writeMembers(std::ostream &fstream)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Writing members.") << std::endl;
 
-	std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Members, Parser::Comparator());
+	const Parser::ObjectList &list = parent()->parser()->getList(Parser::Members);
 
-	for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
+	for (Parser::ObjectList::const_iterator iterator = list.begin(); iterator != list.end(); ++iterator)
 	{
-		class Member *member = static_cast<class Member*>(*iterator);
+		const Member *member = boost::polymorphic_cast<const Member*>(iterator->second);
 
 		if (member->isDelegate())
 			continue;
@@ -124,26 +130,26 @@ void Compiler::writeMembers(std::fstream &fstream)
 	}
 }
 
-void Compiler::writeFunctionPrototypeGlobals(std::fstream &fstream)
+void Compiler::writeFunctionPrototypeGlobals(std::ostream &fstream)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Writing function prototype globals.") << std::endl;
 
 	// check if there are .execute or .evaluate calls of a function.
 }
 
-void Compiler::writeMethodPrototypeGlobals(std::fstream &fstream)
+void Compiler::writeMethodPrototypeGlobals(std::ostream &fstream)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Writing method prototype globals.") << std::endl;
 
 	// check if there are .execute or .evaluate calls of a method.
 	// Note that .evaluate and .execute aren't used automatically like in vJass.
 }
 
-void Compiler::writeLibraries(std::fstream &fstream)
+void Compiler::writeLibraries(std::ostream &fstream)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Writing libraries.") << std::endl;
 
 	// write all functions and methods and text macro instances in the right order.

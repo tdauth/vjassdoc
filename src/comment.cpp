@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008, 2009 by Tamino Dauth                              *
+ *   Copyright (C) 2008 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,40 +18,26 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <sstream>
-
 #include "objects.hpp"
 #include "internationalisation.hpp"
 
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Comment::sqlTableName = "Comments";
-unsigned int Comment::sqlColumns;
-std::string Comment::sqlColumnStatement;
-
-void Comment::initClass()
+Comment::Comment(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment) : Object(parser, identifier, sourceFile, line, docComment)
 {
-	Comment::sqlColumns = Object::sqlColumns;
-	Comment::sqlColumnStatement = Object::sqlColumnStatement;
 }
-#endif
 
-Comment::Comment(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment) : Object(identifier, sourceFile, line, docComment)
+Comment::Comment(Parser* parser): Object(parser)
 {
 }
 
 #ifdef SQLITE
-Comment::Comment(std::vector<const unsigned char*> &columnVector) : Object(columnVector)
+const char* Comment::sqlTableName() const
 {
-	this->prepareVector();
+	return "Comments";
 }
 #endif
-
-Comment::~Comment()
-{
-}
 
 void Comment::init()
 {

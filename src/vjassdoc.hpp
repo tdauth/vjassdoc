@@ -39,212 +39,198 @@ class Vjassdoc
 		static const char *version;
 		static const bool supportsDatabaseCreation;
 
-		static void configure(bool optionJass, bool optionDebug, bool optionPrivate, bool optionTextmacros, bool optionFunctions, bool optionHtml, bool optionPages, bool optionSpecialpages, bool optionSyntax, const std::string &optionCompile, const std::string &optionDatabase, bool optionVerbose, bool optionTime, bool optionAlphabetical, bool optionParseObjectsOfList[Parser::MaxLists], const std::string &optionTitle, const std::string &optionDir, std::list<std::string> optionImport, std::list<std::string> optionFiles, std::list<std::string> optionDatabases);
+		Vjassdoc(bool optionJass, bool optionDebug, bool optionPrivate, bool optionTextmacros, bool optionFunctions, bool optionHtml, bool optionPages, bool optionSpecialpages, bool optionSyntax, const std::string &optionCompile, const std::string &optionDatabase, bool optionVerbose, bool optionTime, bool optionAlphabetical, bool optionParseObjectsOfList[Parser::MaxLists], const std::string &optionTitle, const std::string &optionDir, std::list<std::string> optionImport, std::list<std::string> optionFiles, std::list<std::string> optionDatabases);
+		Vjassdoc();
 
 #ifdef SQLITE
 		static void initClasses();
 #endif
-		static void run();
-		static void clear();
-		static class Parser* parser();
-		static class Compiler* compiler();
-		static unsigned int lines();
-		static unsigned int files();
-		static double duration();
-		static double cpuDuration();
-		static bool optionJass();
-		static bool optionDebug();
-		static bool optionPrivate();
-		static bool optionTextmacros();
-		static bool optionFunctions();
-		static bool optionHtml();
-		static bool optionPages();
-		static bool optionSpecialpages();
-		static bool optionSyntax();
-		static std::string optionCompile();
-		static std::string optionDatabase();
-		static bool optionVerbose();
-		static bool optionTime();
-		static bool optionAlphabetical();
-		static bool optionParseObjectsOfList(const enum Parser::List &list);
-		static std::string optionTitle();
-		static std::string optionDir();
-		static std::list<std::string> optionImport();
-		static std::list<std::string> optionFiles();
-		static std::list<std::string> optionDatabases();
-
-		static void addLines(const unsigned int &addedLines);
-		static void addFile();
-	private:
-		Vjassdoc();
-		Vjassdoc(Vjassdoc&);
+		void run();
 		~Vjassdoc();
+		class Parser* parser() const;
+		class Compiler* compiler() const;
+		unsigned int lines() const;
+		unsigned int files() const;
+		bool optionJass() const;
+		bool optionDebug() const;
+		bool optionPrivate() const;
+		bool optionTextmacros() const;
+		bool optionFunctions() const;
+		bool optionHtml() const;
+		bool optionPages() const;
+		bool optionSpecialpages() const;
+		bool optionSyntax() const;
+		const std::string& optionCompile() const;
+		const std::string& optionDatabase() const;
+		bool optionVerbose() const;
+		bool optionTime() const;
+		bool optionAlphabetical() const;
+		bool optionParseObjectsOfList(enum Parser::List list) const;
+		const std::string& optionTitle() const;
+		const std::string& optionDir() const;
+		const std::list<std::string>& optionImport() const;
+		const std::list<std::string>& optionFiles() const;
+		const std::list<std::string>& optionDatabases() const;
 
-		static class Parser *m_parser;
-		static class Compiler *m_compiler;
-		static unsigned int m_lines;
-		static unsigned int m_files;
-		static double m_duration;
-		static double m_cpuDuration;
-		static bool m_optionJass;
-		static bool m_optionDebug;
-		static bool m_optionPrivate;
-		static bool m_optionTextmacros;
-		static bool m_optionFunctions;
-		static bool m_optionHtml;
-		static bool m_optionPages;
-		static bool m_optionSpecialpages;
-		static bool m_optionSyntax;
-		static std::string m_optionCompile;
-		static std::string m_optionDatabase;
-		static bool m_optionVerbose;
-		static bool m_optionTime;
-		static bool m_optionAlphabetical;
-		static bool m_optionParseObjectsOfList[Parser::MaxLists];
-		static std::string m_optionTitle;
-		static std::string m_optionDir;
-		static std::list<std::string> m_optionImport;
-		static std::list<std::string> m_optionFiles;
-		static std::list<std::string> m_optionDatabases;
+		void addLines(unsigned int addedLines);
+		void addFile();
+	private:
+		//operator=(const Vjassdoc&);
+		Vjassdoc(const Vjassdoc&);
+
+		class Parser *m_parser;
+		class Compiler *m_compiler;
+		unsigned int m_lines;
+		unsigned int m_files;
+		bool m_optionJass;
+		bool m_optionDebug;
+		bool m_optionPrivate;
+		bool m_optionTextmacros;
+		bool m_optionFunctions;
+		bool m_optionHtml;
+		bool m_optionPages;
+		bool m_optionSpecialpages;
+		bool m_optionSyntax;
+		std::string m_optionCompile;
+		std::string m_optionDatabase;
+		bool m_optionVerbose;
+		bool m_optionTime;
+		bool m_optionAlphabetical;
+		bool m_optionParseObjectsOfList[Parser::MaxLists];
+		std::string m_optionTitle;
+		std::string m_optionDir;
+		std::list<std::string> m_optionImport;
+		std::list<std::string> m_optionFiles;
+		std::list<std::string> m_optionDatabases;
 };
 
-inline Parser* Vjassdoc::parser()
+inline Parser* Vjassdoc::parser() const
 {
-	if (Vjassdoc::m_parser == 0)
-		Vjassdoc::m_parser = new Parser();
+	if (this->m_parser == 0)
+		const_cast<Vjassdoc*>(this)->m_parser = new Parser(const_cast<Vjassdoc*>(this));
 
-	return Vjassdoc::m_parser;
+	return this->m_parser;
 }
 
-inline Compiler* Vjassdoc::compiler()
+inline Compiler* Vjassdoc::compiler() const
 {
-	if (Vjassdoc::m_compiler == 0)
-		Vjassdoc::m_compiler = new Compiler();
+	if (this->m_compiler == 0)
+		const_cast<Vjassdoc*>(this)->m_compiler = new Compiler(const_cast<Vjassdoc*>(this));
 
-	return Vjassdoc::m_compiler;
+	return this->m_compiler;
 }
 
-inline unsigned int Vjassdoc::lines()
+inline unsigned int Vjassdoc::lines() const
 {
 	return Vjassdoc::m_lines;
 }
 
-inline unsigned int Vjassdoc::files()
+inline unsigned int Vjassdoc::files() const
 {
 	return Vjassdoc::m_files;
 }
 
-inline double Vjassdoc::duration()
-{
-	return Vjassdoc::m_duration;
-}
-
-inline double Vjassdoc::cpuDuration()
-{
-	return Vjassdoc::m_cpuDuration;
-}
-
-inline bool Vjassdoc::optionJass()
+inline bool Vjassdoc::optionJass() const
 {
 	return Vjassdoc::m_optionJass;
 }
 
-inline bool Vjassdoc::optionDebug()
+inline bool Vjassdoc::optionDebug() const
 {
 	return Vjassdoc::m_optionDebug;
 }
 
-inline bool Vjassdoc::optionPrivate()
+inline bool Vjassdoc::optionPrivate() const
 {
 	return Vjassdoc::m_optionPrivate;
 }
 
-inline bool Vjassdoc::optionTextmacros()
+inline bool Vjassdoc::optionTextmacros() const
 {
 	return Vjassdoc::m_optionTextmacros;
 }
 
-inline bool Vjassdoc::optionFunctions()
+inline bool Vjassdoc::optionFunctions() const
 {
 	return Vjassdoc::m_optionFunctions;
 }
 
-inline bool Vjassdoc::optionHtml()
+inline bool Vjassdoc::optionHtml() const
 {
 	return Vjassdoc::m_optionHtml;
 }
 
-inline bool Vjassdoc::optionPages()
+inline bool Vjassdoc::optionPages() const
 {
 	return Vjassdoc::m_optionPages;
 }
 
-inline bool Vjassdoc::optionSpecialpages()
+inline bool Vjassdoc::optionSpecialpages() const
 {
 	return Vjassdoc::m_optionSpecialpages;
 }
 
-inline bool Vjassdoc::optionSyntax()
+inline bool Vjassdoc::optionSyntax() const
 {
 	return Vjassdoc::m_optionSyntax;
 }
 
-inline std::string Vjassdoc::optionCompile()
+inline const std::string& Vjassdoc::optionCompile() const
 {
 	return Vjassdoc::m_optionCompile;
 }
 
-inline std::string Vjassdoc::optionDatabase()
+inline const std::string& Vjassdoc::optionDatabase() const
 {
 	return Vjassdoc::m_optionDatabase;
 }
 
-inline bool Vjassdoc::optionVerbose()
+inline bool Vjassdoc::optionVerbose() const
 {
 	return Vjassdoc::m_optionVerbose;
 }
 
-inline bool Vjassdoc::optionTime()
+inline bool Vjassdoc::optionTime() const
 {
 	return Vjassdoc::m_optionTime;
 }
 
-inline bool Vjassdoc::optionAlphabetical()
+inline bool Vjassdoc::optionAlphabetical() const
 {
 	return Vjassdoc::m_optionAlphabetical;
 }
 
-inline bool Vjassdoc::optionParseObjectsOfList(const enum Parser::List &list)
+inline bool Vjassdoc::optionParseObjectsOfList(Parser::List list) const
 {
 	return Vjassdoc::m_optionParseObjectsOfList[list];
 }
 
-inline std::string Vjassdoc::optionTitle()
+inline const std::string& Vjassdoc::optionTitle() const
 {
 	return Vjassdoc::m_optionTitle;
 }
 
-inline std::string Vjassdoc::optionDir()
+inline const std::string& Vjassdoc::optionDir() const
 {
 	return Vjassdoc::m_optionDir;
 }
 
-inline std::list<std::string> Vjassdoc::optionImport()
+inline const std::list<std::string>& Vjassdoc::optionImport() const
 {
 	return Vjassdoc::m_optionImport;
 }
 
-inline std::list<std::string> Vjassdoc::optionFiles()
+inline const std::list<std::string>& Vjassdoc::optionFiles() const
 {
 	return Vjassdoc::m_optionFiles;
 }
 
-inline std::list<std::string> Vjassdoc::optionDatabases()
+inline const std::list<std::string>& Vjassdoc::optionDatabases() const
 {
 	return Vjassdoc::m_optionDatabases;
 }
 
-inline void Vjassdoc::addLines(const unsigned int &addedLines)
+inline void Vjassdoc::addLines(unsigned int addedLines)
 {
 	Vjassdoc::m_lines += addedLines;
 }

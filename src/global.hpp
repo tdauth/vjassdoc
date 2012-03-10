@@ -31,22 +31,18 @@ namespace vjassdoc
 class Global : public Object
 {
 	public:
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		Global(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression);
+		Global(class Parser *parser);
 
-		static void initClass();
-#endif
-		Global(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression);
-#ifdef SQLITE
-		Global(std::vector<const unsigned char*> &columnVector);
-#endif
 		virtual void init();
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
 #ifdef SQLITE
-		virtual std::string sqlStatement() const;
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		virtual class Library* library() const;
 		virtual class Scope* scope() const;
@@ -54,9 +50,9 @@ class Global : public Object
 		bool isPublic() const;
 		bool isConstant() const;
 		class Object* type() const; //Type, Interface, Struct
-		std::string typeExpression() const; //Unknown type
+		const std::string& typeExpression() const; //Unknown type
 		class Object* value() const; //Global, Member (static), Function, Method (static)
-		std::string valueLiteral() const; //Literal
+		const std::string& valueLiteral() const; //Literal
 		class Object* size() const; //Global (constant), Member (static, constant), Function (constant), Method (static, constant)
 		int sizeLiteral() const;
 
@@ -95,7 +91,7 @@ inline class Object* Global::type() const
 	return this->m_type;
 }
 
-inline std::string Global::typeExpression() const
+inline const std::string& Global::typeExpression() const
 {
 	return this->m_typeExpression;
 }
@@ -105,7 +101,7 @@ inline  class Object* Global::value() const
 	return this->m_value;
 }
 
-inline std::string Global::valueLiteral() const
+inline const std::string& Global::valueLiteral() const
 {
 	return this->valueExpression;
 }

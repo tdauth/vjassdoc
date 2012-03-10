@@ -38,7 +38,7 @@ class FunctionInterface : public Object
 
 		static void initClass();
 #endif
-		FunctionInterface(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression);
+		FunctionInterface(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression);
 #ifdef SQLITE
 		FunctionInterface(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -52,9 +52,9 @@ class FunctionInterface : public Object
 		virtual class Library* library() const;
 		virtual class Scope* scope() const;
 		bool isPrivate() const;
-		std::list<class Parameter*> parameters() const;
+		const std::list<class Parameter*>& parameters() const;
 		class Object* returnType() const; //Type, Function Interface, Interface, Struct
-		std::string returnTypeExpression() const;
+		const std::string& returnTypeExpression() const;
 
 	protected:
 		static const int maxParameters;
@@ -71,7 +71,7 @@ inline bool FunctionInterface::isPrivate() const
 	return this->m_isPrivate;
 }
 
-inline std::list<class Parameter*> FunctionInterface::parameters() const
+inline const std::list<class Parameter*>& FunctionInterface::parameters() const
 {
 	return this->m_parameters;
 }
@@ -81,7 +81,7 @@ inline class Object* FunctionInterface::returnType() const
 	return this->m_returnType;
 }
 
-inline std::string FunctionInterface::returnTypeExpression() const
+inline const std::string& FunctionInterface::returnTypeExpression() const
 {
 	return this->m_returnTypeExpression;
 }

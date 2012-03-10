@@ -43,7 +43,7 @@ void Method::initClass()
 }
 #endif
 
-Method::Method(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression, bool isPublic, bool isConstant, class Object *container, bool isStatic, bool isStub, bool isOperator, const std::string &defaultReturnValueExpression) : Function(identifier, sourceFile, line, docComment, library, scope, isPrivate, parameters, returnTypeExpression, isPublic, isConstant, false), m_container(container), m_isStatic(isStatic), m_isStub(isStub), m_isOperator(isOperator), m_defaultReturnValue(0), m_defaultReturnValueExpression(defaultReturnValueExpression)
+Method::Method(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression, bool isPublic, bool isConstant, class Object *container, bool isStatic, bool isStub, bool isOperator, const std::string &defaultReturnValueExpression) : Function(parser, identifier, sourceFile, line, docComment, library, scope, isPrivate, parameters, returnTypeExpression, isPublic, isConstant, false), m_container(container), m_isStatic(isStatic), m_isStub(isStub), m_isOperator(isOperator), m_defaultReturnValue(0), m_defaultReturnValueExpression(defaultReturnValueExpression)
 {
 }
 
@@ -61,17 +61,17 @@ void Method::init()
 	{
 		if (Object::hasToSearchValueObject(static_cast<class Type*>(this->returnType()), this->m_defaultReturnValueExpression))
 		{
-			this->m_defaultReturnValue = this->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Types);
-		
+			this->m_defaultReturnValue = this->parser()->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Types, this);
+
 			if (this->m_defaultReturnValue == 0)
-				this->m_defaultReturnValue = this->searchObjectInList(this->m_defaultReturnValueExpression, Parser::FunctionInterfaces);
-			
+				this->m_defaultReturnValue = this->parser()->searchObjectInList(this->m_defaultReturnValueExpression, Parser::FunctionInterfaces, this);
+
 			if (this->m_defaultReturnValue == 0)
-				this->m_defaultReturnValue = this->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Interfaces);
-			
+				this->m_defaultReturnValue = this->parser()->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Interfaces, this);
+
 			if (this->m_defaultReturnValue == 0)
-				this->m_defaultReturnValue = this->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Structs);
-			
+				this->m_defaultReturnValue = this->parser()->searchObjectInList(this->m_defaultReturnValueExpression, Parser::Structs, this);
+
 			if (this->m_defaultReturnValue != 0)
 				this->m_defaultReturnValueExpression.clear();
 		}

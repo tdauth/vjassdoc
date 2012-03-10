@@ -19,8 +19,6 @@
  ***************************************************************************/
 
 #include <cctype>
-#include <sstream>
-#include <iostream>
 
 #include "objects.hpp"
 #include "vjassdoc.hpp"
@@ -29,58 +27,33 @@
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Global::sqlTableName = "Globals";
-unsigned int Global::sqlColumns;
-std::string Global::sqlColumnStatement;
-
-void Global::initClass()
-{
-	Global::sqlColumns = Object::sqlColumns + 10;
-	Global::sqlColumnStatement = Object::sqlColumnStatement +
-	",Library INT,"
-	"Scope INT,"
-	"IsPrivate BOOLEAN,"
-	"IsPublic BOOLEAN,"
-	"IsConstant BOOLEAN,"
-	"Type INT,"
-	"Value INT,"
-	"ValueLiteral VARCHAR(50),"
-	"Size INT,"
-	"SizeLiteral INT";
-}
-#endif
-
-Global::Global(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression) : m_library(library), m_scope(scope), m_isPrivate(isPrivate), m_isPublic(isPublic), m_isConstant(isConstant), m_typeExpression(typeExpression), valueExpression(valueExpression), sizeExpression(sizeExpression), m_type(0), m_value(0), m_size(0), Object(identifier, sourceFile, line, docComment)
+Global::Global(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression) : m_library(library), m_scope(scope), m_isPrivate(isPrivate), m_isPublic(isPublic), m_isConstant(isConstant), m_typeExpression(typeExpression), valueExpression(valueExpression), sizeExpression(sizeExpression), m_type(0), m_value(0), m_size(0), Object(parser, identifier, sourceFile, line, docComment)
 {
 }
 
-#ifdef SQLITE
-Global::Global(std::vector<const unsigned char*> &columnVector) : m_type(0), m_value(0), m_size(0), Object(columnVector)
+Global::Global(Parser *parser) : m_type(0), m_value(0), m_size(0), Object(parser)
 {
-	this->prepareVector();
 }
-#endif
 
 /// @todo Value expressions can be calculations etc..
 void Global::init()
 {
 	//Must not be empty.
-	this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Types);
+	this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Types, this);
 
 	//std::cout << "1 ALTA with type identifier " << this->m_type->identifier() << std::endl;
 
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Interfaces);
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Interfaces, this);
 
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Structs);
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Structs, this);
 
 	if (this->m_type != 0)
 		this->m_typeExpression.clear();
 
 	this->m_value = this->findValue(this->m_type, this->valueExpression);
-	this->m_size = this->findValue(Vjassdoc::parser()->integerType(), this->sizeExpression);
+	this->m_size = this->findValue(parser()->integerType(), this->sizeExpression);
 }
 
 void Global::pageNavigation(std::ofstream &file) const
@@ -151,33 +124,65 @@ void Global::page(std::ofstream &file) const
 }
 
 #ifdef SQLITE
-std::string Global::sqlStatement() const
+const char* Global::sqlTableName() const
 {
-	if (this->identifier() == "EVENT_GAME_LEAVE_REGION")
-	{
-		std::cout
-		<< "Library " << this->library() << std::endl
-		<< "Scope " << this->scope() << std::endl
-		<< "Documentation comment " << this->docComment() << std::endl
-		;
-	}
+	return "Globals";
+}
 
-	std::ostringstream sstream;
-	sstream
-	<< Object::sqlStatement() << ", "
-	<< "Library=" << Object::objectId(this->library()) << ", "
-	<< "Scope=" << Object::objectId(this->scope()) << ", "
-	<< "IsPrivate=" << this->isPrivate() << ", "
-	<< "IsPublic=" << this->isPublic() << ", "
-	<< "IsConstant=" << this->isConstant() << ", "
-	<< "Type=" << Object::objectId(this->type()) << ", "
-	<< "Value=" << Object::objectId(this->value()) << ", "
-	<< "ValueLiteral=\"" << Object::sqlFilteredString(this->valueLiteral()) << "\", "
-	<< "Size=" << Object::objectId(this->size()) << ", "
-	<< "SizeLiteral=" << this->sizeLiteral()
-	;
+std::size_t Global::sqlSize() const
+{
+	return Object::sqlSize() + 10;
+}
 
-	return sstream.str();
+Object::SqlColumn Global::sqlNames() const
+{
+	SqlColumn result = Object::sqlNames();
+	result.push_back("Library");
+	result.push_back("Scope");
+	result.push_back("IsPrivate");
+	result.push_back("IsPublic");
+	result.push_back("IsConstant");
+	result.push_back("Type");
+	result.push_back("Value");
+	result.push_back("ValueLiteral");
+	result.push_back("Size");
+	result.push_back("SizeLiteral");
+
+	return result;
+}
+
+Object::SqlColumn Global::sqlTypes() const
+{
+	SqlColumn result = Object::sqlTypes();
+	result.push_back("INT");
+	result.push_back("INT");
+	result.push_back("BOOLEAN");
+	result.push_back("BOOLEAN");
+	result.push_back("BOOLEAN");
+	result.push_back("INT");
+	result.push_back("INT");
+	result.push_back("VARCHAR(50)");
+	result.push_back("INT");
+	result.push_back("INT");
+
+	return result;
+}
+
+Object::SqlColumn Global::sqlValues() const
+{
+	SqlColumn result = Object::sqlValues();
+	result.push_back(objectIdString(this->library()));
+	result.push_back(objectIdString(this->scope()));
+	result.push_back(boost::lexical_cast<std::string>(this->isPrivate()));
+	result.push_back(boost::lexical_cast<std::string>(this->isPublic()));
+	result.push_back(boost::lexical_cast<std::string>(this->isConstant()));
+	result.push_back(objectIdString(this->type()));
+	result.push_back(objectIdString(this->value()));
+	result.push_back(sqlFilteredString(this->valueLiteral()));
+	result.push_back(objectIdString(this->size()));
+	result.push_back(boost::lexical_cast<std::string>(this->sizeLiteral()));
+
+	return result;
 }
 #endif
 

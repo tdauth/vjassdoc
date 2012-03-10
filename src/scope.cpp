@@ -20,6 +20,8 @@
 
 #include <sstream>
 
+#include <boost/foreach.hpp>
+
 #include "objects.hpp"
 #include "internationalisation.hpp"
 
@@ -41,7 +43,7 @@ void Scope::initClass()
 }
 #endif
 
-Scope::Scope(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, bool isPrivate, const std::string initializerExpression) : Object(identifier, sourceFile, line, docComment), initializerExpression(initializerExpression), m_library(library), m_isPrivate(isPrivate), m_initializer(0)
+Scope::Scope(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, bool isPrivate, const std::string initializerExpression) : Object(parser, identifier, sourceFile, line, docComment), initializerExpression(initializerExpression), m_library(library), m_isPrivate(isPrivate), m_initializer(0)
 {
 }
 
@@ -55,11 +57,11 @@ void Scope::init()
 {
 	if (!this->initializerExpression.empty())
 	{
-		this->m_initializer = static_cast<Function*>(this->searchObjectInList(this->initializerExpression, Parser::Functions));
-		
+		this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
+
 		if (this->m_initializer == 0)
-			this->m_initializer = static_cast<Function*>(this->searchObjectInList(this->initializerExpression, Parser::Methods));
-		
+			this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
+
 		if (this->m_initializer != 0)
 			this->initializerExpression.clear();
 	}
@@ -102,160 +104,160 @@ void Scope::page(std::ofstream &file) const
 	<< "\t\t" << Object::objectPageLink(this->initializer(), this->initializerExpression) << '\n'
 	<< "\t\t<h2><a name=\"Keywords\">" << _("Keywords") << "</a></h2>\n"
 	;
-	
-	std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Keywords, Object::IsInScope(), this);
-	
+
+	Parser::SpecificObjectList list = parser()->getSpecificList<IsInScope>(Parser::Keywords, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Text Macros\">" << _("Text Macros") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::TextMacros, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::TextMacros, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Text Macro Instances\">" << _("Text Macro Instances") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::TextMacroInstances, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::TextMacroInstances, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Types\">" << _("Types") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Types, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::Types, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Globals\">" << _("Globals") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Globals, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::Globals, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Function Interfaces\">" << _("Function Interfaces") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::FunctionInterfaces, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::FunctionInterfaces, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Functions\">" << _("Functions") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Functions, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::Functions, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Interfaces\">" << _("Interfaces") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Interfaces, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::Interfaces, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Structs\">" << _("Structs") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Structs, Object::IsInScope(), this);
-	
+
+	list = parser()->getSpecificList<IsInScope>(Parser::Structs, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else

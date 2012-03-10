@@ -31,17 +31,7 @@ namespace vjassdoc
 namespace gui
 {
 
-const KAboutData *MainWindow::aboutData = new KAboutData("vjassdocgui",
-"",
-ki18n("vjassdocgui"),
-"0.1",
-ki18n("Graphical user interface for vjassdoc."),
-KAboutData::License_GPL_V2,
-ki18n("(C) 2009 Tamino Dauth"),
-ki18n("Bla bla bla"),
-"http://sourceforge.net/projects/vjasssdk/");
-
-MainWindow::MainWindow(QWidget *parent) : KMainWindow(parent), m_widget(new Widget(this))
+MainWindow::MainWindow(const KAboutData &about, QWidget *parent) : KMainWindow(parent), m_widget(new Widget(about, this))
 {
 	//this->m_widget->setupUi(this);
 	this->setCentralWidget(this->m_widget);

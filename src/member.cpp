@@ -18,8 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <sstream>
-#include <iostream> //debug
+#include <boost/cast.hpp>
 
 #include "objects.hpp"
 #include "file.hpp"
@@ -28,30 +27,13 @@
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Member::sqlTableName = "Members";
-unsigned int Member::sqlColumns;
-std::string Member::sqlColumnStatement;
-
-void Member::initClass()
-{
-	Member::sqlColumns = Global::sqlColumns + 3;
-	Member::sqlColumnStatement = Global::sqlColumnStatement +
-	",Container INT,"
-	"IsStatic BOOLEAN,"
-	"IsDelegate BOOLEAN";
-}
-#endif
-
-Member::Member(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression, class Object *container, bool isStatic, bool isDelegate) : Global(identifier, sourceFile, line, docComment, library, scope, isPrivate, isPublic, isConstant, typeExpression, valueExpression, sizeExpression), m_container(container), m_isStatic(isStatic), m_isDelegate(isDelegate)
+Member::Member(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression, class Object *container, bool isStatic, bool isDelegate) : Global(parser, identifier, sourceFile, line, docComment, library, scope, isPrivate, isPublic, isConstant, typeExpression, valueExpression, sizeExpression), m_container(container), m_isStatic(isStatic), m_isDelegate(isDelegate)
 {
 }
 
-#ifdef SQLITE
-Member::Member(std::vector<const unsigned char*> &columnVector) : Global(columnVector), m_container(0)
+Member::Member(Parser *parser) : Global(parser), m_container(0)
 {
 }
-#endif
 
 void Member::init()
 {
@@ -60,10 +42,9 @@ void Member::init()
 	else if (this->typeExpression() == File::expressionText[File::SuperExpression])
 	{
 		/// @todo ERROR
-		this->m_typeExpression = static_cast<class Struct*>(this->container())->extensionExpression(); /// use expression since structs are initialized after members.
-		std::cout << "Identifier " << static_cast<class Struct*>(this->container())->extensionExpression() << std::endl;
+		this->m_typeExpression = boost::polymorphic_cast<class Struct*>(this->container())->extensionExpression(); /// use expression since structs are initialized after members.
 	}
-	
+
 	Global::init();
 }
 
@@ -91,16 +72,44 @@ void Member::page(std::ofstream &file) const
 }
 
 #ifdef SQLITE
-std::string Member::sqlStatement() const
+const char* Member::sqlTableName() const
 {
-	std::ostringstream sstream;
-	sstream
-	<< Global::sqlStatement() << ", "
-	<< "Container=" << Object::objectId(this->container()) << ", "
-	<< "IsStatic=" << this->isStatic() << ", "
-	<< "IsDelegate=" << this->isDelegate();
+	return "Members";
+}
 
-	return sstream.str();
+std::size_t Member::sqlSize() const
+{
+	return Global::sqlSize() + 3;
+}
+
+Object::SqlColumn Member::sqlNames() const
+{
+	SqlColumn result = Global::sqlNames();
+	result.push_back("Container");
+	result.push_back("IsStatic");
+	result.push_back("IsDelegate");
+
+	return result;
+}
+
+Object::SqlColumn Member::sqlTypes() const
+{
+	SqlColumn result = Global::sqlTypes();
+	result.push_back("INT");
+	result.push_back("BOOLEAN");
+	result.push_back("BOOLEAN");
+
+	return result;
+}
+
+Object::SqlColumn Member::sqlValues() const
+{
+	SqlColumn result = Global::sqlValues();
+	result.push_back(objectIdString(this->container()));
+	result.push_back(boost::lexical_cast<std::string>(this->isStatic()));
+	result.push_back(boost::lexical_cast<std::string>(this->isDelegate()));
+
+	return result;
 }
 #endif
 

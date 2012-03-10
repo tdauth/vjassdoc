@@ -37,7 +37,7 @@ class Parameter : public Object
 
 		static void initClass();
 #endif
-		Parameter(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class FunctionInterface *functionInterface, const std::string &typeExpression);
+		Parameter(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class FunctionInterface *functionInterface, const std::string &typeExpression);
 #ifdef SQLITE
 		Parameter(std::vector<const unsigned char*> &columnVector);
 #endif

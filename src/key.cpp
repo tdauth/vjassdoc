@@ -23,25 +23,20 @@
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Key::sqlTableName = "Keys";
-unsigned int Key::sqlColumns;
-std::string Key::sqlColumnStatement;
-
-void Key::initClass()
+Key::Key(Parser *parser, const std::string &identifier, SourceFile *sourceFile, unsigned int line, DocComment *docComment, Library *library, Scope *scope, bool isPrivate) : Keyword(parser, identifier, sourceFile, line, docComment, library, scope, isPrivate)
 {
-	Key::sqlColumns = Keyword::sqlColumns;
-	Key::sqlColumnStatement = Keyword::sqlColumnStatement;
+
 }
-#endif
 
-Key::Key(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate) : Keyword(identifier, sourceFile, line, docComment, library, scope, isPrivate)
+Key::Key(Parser *parser) : Keyword(parser)
 {
+
 }
 
 #ifdef SQLITE
-Key::Key(std::vector<const unsigned char*> &columnVector) : Keyword(columnVector)
+const char* Key::sqlTableName() const
 {
+	return "Keys";
 }
 #endif
 

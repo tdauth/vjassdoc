@@ -37,7 +37,7 @@ class Call : public Object
 
 		static void initClass();
 #endif
-		Call(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionIdentifier, std::list<std::string> *argumentIdentifiers, bool isExecuted, bool isEvaluated);
+		Call(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionIdentifier, std::list<std::string> *argumentIdentifiers, bool isExecuted, bool isEvaluated);
 #ifdef SQLITE
 		Call(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -48,14 +48,14 @@ class Call : public Object
 #ifdef SQLITE
 		virtual std::string sqlStatement() const;
 #endif
-		
-		std::string functionIdentifier() const;
+
+		const std::string& functionIdentifier() const;
 		class Function* function() const;
 		std::list<std::string>* argumentIdentifiers() const;
 		std::list<class Object*>* arguments() const;
 		bool isExecuted() const;
 		bool isEvaluated() const;
-		
+
 	private:
 		std::string m_functionIdentifier;
 		class Function *m_function;
@@ -65,7 +65,7 @@ class Call : public Object
 		bool m_isEvaluated;
 };
 
-inline std::string Call::functionIdentifier() const
+inline const std::string& Call::functionIdentifier() const
 {
 	return this->m_functionIdentifier;
 }

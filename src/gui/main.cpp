@@ -21,7 +21,6 @@
 #include <KApplication>
 #include <KCmdLineArgs>
 
-#include "application.hpp"
 #include "mainwindow.hpp"
 
 int main(int argc, char *argv[])
@@ -45,8 +44,8 @@ int main(int argc, char *argv[])
 	KCmdLineOptions options;
 	KCmdLineArgs::addCmdLineOptions(options);
 
-	vjassdoc::gui::Application app;
-	class vjassdoc::gui::MainWindow *mainWindow = new vjassdoc::gui::MainWindow();
+	KApplication app;
+	vjassdoc::gui::MainWindow *mainWindow = new vjassdoc::gui::MainWindow(aboutData);
 	mainWindow->show();
 
 	return app.exec();

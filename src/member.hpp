@@ -29,22 +29,18 @@ namespace vjassdoc
 class Member : public Global
 {
 	public:
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		Member(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression, class Object *container, bool isStatic, bool isDelegate);
+		Member(class Parser *parser);
 
-		static void initClass();
-#endif
-		Member(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, bool isPublic, bool isConstant, const std::string &typeExpression, const std::string &valueExpression, const std::string &sizeExpression, class Object *container, bool isStatic, bool isDelegate);
-#ifdef SQLITE
-		Member(std::vector<const unsigned char*> &columnVector);
-#endif
 		virtual void init();
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
 #ifdef SQLITE
-		virtual std::string sqlStatement() const;
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		virtual class Object* container() const;
 		bool isStatic() const;

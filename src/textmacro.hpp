@@ -29,25 +29,22 @@ namespace vjassdoc
 class TextMacro : public Object
 {
 	public:
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		TextMacro(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &parameters);
+		TextMacro(class Parser *parser);
 
-		static void initClass();
-#endif
-		TextMacro(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &parameters);
-#ifdef SQLITE
-		TextMacro(std::vector<const unsigned char*> &columnVector);
-#endif
 		virtual void init();
+
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
 #ifdef SQLITE
-		virtual std::string sqlStatement() const;
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		bool isOnce() const;
-		std::string parameters() const;
+		const std::string& parameters() const;
 
 	protected:
 		bool m_isOnce;
@@ -59,7 +56,7 @@ inline bool TextMacro::isOnce() const
 	return this->m_isOnce;
 }
 
-inline std::string TextMacro::parameters() const
+inline const std::string& TextMacro::parameters() const
 {
 	return this->m_parameters;
 }

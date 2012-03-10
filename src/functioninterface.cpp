@@ -51,7 +51,7 @@ void FunctionInterface::initClass()
 }
 #endif
 
-FunctionInterface::FunctionInterface(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression) : Object(identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate), m_parameters(parameters), m_returnTypeExpression(returnTypeExpression), m_returnType(0)
+FunctionInterface::FunctionInterface(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression) : Object(parser, identifier, sourceFile, line, docComment), m_library(library), m_scope(scope), m_isPrivate(isPrivate), m_parameters(parameters), m_returnTypeExpression(returnTypeExpression), m_returnType(0)
 {
 
 	for (std::list<class Parameter*>::iterator iterator = this->m_parameters.begin(); iterator != this->m_parameters.end(); ++iterator)
@@ -73,16 +73,16 @@ void FunctionInterface::init()
 {
 	if (!this->m_returnTypeExpression.empty())
 	{
-		this->m_returnType = this->searchObjectInList(this->m_returnTypeExpression, Parser::FunctionInterfaces);
+		this->m_returnType = this->parser()->searchObjectInList(this->m_returnTypeExpression, Parser::FunctionInterfaces, this);
 
 		if (this->m_returnType == 0)
-			this->m_returnType = this->searchObjectInList(this->m_returnTypeExpression, Parser::Types);
+			this->m_returnType = this->parser()->searchObjectInList(this->m_returnTypeExpression, Parser::Types, this);
 
 		if (this->m_returnType == 0)
-			this->m_returnType = this->searchObjectInList(this->m_returnTypeExpression, Parser::Interfaces);
+			this->m_returnType = this->parser()->searchObjectInList(this->m_returnTypeExpression, Parser::Interfaces, this);
 
 		if (this->m_returnType == 0)
-			this->m_returnType = this->searchObjectInList(this->m_returnTypeExpression, Parser::Structs);
+			this->m_returnType = this->parser()->searchObjectInList(this->m_returnTypeExpression, Parser::Structs, this);
 
 		if (this->m_returnType != 0)
 			this->m_returnTypeExpression.clear();
@@ -91,7 +91,7 @@ void FunctionInterface::init()
 			char message[256];
 			sprintf(message, _("Undefined type \"%s\"."), this->m_returnTypeExpression.c_str());
 
-			Vjassdoc::parser()->add(new SyntaxError(this->sourceFile(), this->line(), message));
+			parser()->add(new SyntaxError(this->sourceFile(), this->line(), message));
 		}
 	}
 	else

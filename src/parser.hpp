@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008, 2009 by Tamino Dauth                              *
+ *   Copyright (C) 2008 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -28,6 +28,11 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/ptr_container/ptr_unordered_map.hpp>
+#include <boost/foreach.hpp>
+#include <boost/cast.hpp>
+
+#include "object.hpp"
 #include "vjassdocConfig.h"
 
 namespace vjassdoc
@@ -60,18 +65,16 @@ class SyntaxError;
 * Provides methods for parsing Jass and vJass files. The Parser class has the ability to create a simple HTML
 * API documentation and/or a SQLite3 database.
 * It contains a list for each Object child class.
-* @class File is the class which handles real specific Jass and vJass parsing. Parser does create one or several File instances by getting all file paths from class @class Vjassdoc.
+* \ref File is the class which handles real specific Jass and vJass parsing. Parser does create one or several File instances by getting all file paths from class @class Vjassdoc.
 * After parsing all of those files it is able to create an HTML documentation and an SQLite3 database.
 * Besides it provides several search functions which are required for object initialization which usually is runned after parsing for each parsed object.
-* @see Vjassdoc, File
+* \sa Vjassdoc, File
 */
 class Parser
 {
 	public:
-		struct Comparator : public std::binary_function<const class Object*, const class Object*, bool>
-		{
-			virtual bool operator()(const class Object *thisObject, const class Object *otherObject) const;
-		};
+		typedef boost::ptr_unordered_multimap<std::string, Object> ObjectList;
+		typedef boost::unordered_multimap<std::string, Object*> SpecificObjectList;
 
 		enum List
 		{
@@ -114,15 +117,19 @@ class Parser
 		* Sometimes it can be really useful to create your own small object list. In that case you'll probably want to be able to search in your custom list.
 		* @param objectList User-defined custom list where the method has to search.
 		* @param identifier Object identifier which is searched for.
-		* @param searchMode Used search mode. Check out @enum Parser::SearchMode.
-		* @param object Object instance used for comparisons. If searchMode is @enum Parser::SearchMode::Unspecified this value can be 0.
+		* @param searchMode Used search mode. Check out @ref Parser::SearchMode.
+		* @param object Object instance used for comparisons. If searchMode is \ref Parser::SearchMode::Unspecified this value can be 0.
 		* @return If no object was found it will return 0.
-		* @see Parser::getSpecificList, Parser::searchObjectInLastDatabase, Parser::searchObjectInList
+		* \sa Parser::getSpecificList, Parser::searchObjectInLastDatabase, Parser::searchObjectInList
 		*/
-		static class Object* searchObjectInCustomList(const std::list<class Object*> &objectList, const std::string &identifier, const enum Parser::SearchMode &searchMode = Unspecified, const class Object *object = 0);
+		template<typename ListType>
+		static class Object* searchObjectInCustomList(ListType &objectList, const std::string &identifier, Parser::SearchMode searchMode = Unspecified, const class Object *object = 0);
 
-		Parser();
+		Parser(class Vjassdoc *parent);
 		~Parser();
+
+		Object::IdType nextId();
+
 		void createInheritanceListPage();
 		void createRequirementListPage();
 		void sortAlphabetically();
@@ -144,22 +151,26 @@ class Parser
 		/**
 		* Searches for an object in one of the parsers lists.
 		* @param identifier Object identifier which is searched for.
-		* @param list Parser list which is searched in. Check out @enum Parser::List.
-		* @param searchMode Used search mode. Check out @enum Parser::SearchMode.
-		* @param object Object instance used for comparisons. If searchMode is @enum Parser::SearchMode::Unspecified this value can be 0.
+		* @param list Parser list which is searched in. Check out @ref Parser::List.
+		* @param searchMode Used search mode. Check out @ref Parser::SearchMode.
+		* @param object Object instance used for comparisons. If searchMode is @ref Parser::SearchMode::Unspecified this value can be 0.
 		* @return If no object was found it will return 0.
 		*/
-		class Object* searchObjectInList(const std::string &identifier, const enum Parser::List &list,  const enum Parser::SearchMode &searchMode = Unspecified, const class Object *object = 0);
+		class Object* searchObjectInList(const std::string &identifier, Parser::List list,  Parser::SearchMode searchMode = Unspecified, const class Object *object = 0);
+		class Object* searchObjectInList(const std::string &identifier, Parser::List list, const class Object *object);
 
 		/**
 		* Returns a user-specific list by iterating one of the parsers lists and calling a comparator.
 		* @param list List which is iterated.
-		* @param comparator Comparator which is used for comparisions. If it returns true object will be added to user-specific list.
+		* @param ComparatorType Comparator which is used for comparisions. If it returns true object will be added to user-specific list.
 		* @param object Comparators allows to compare two objects. If you don't have to compare two objects this value can be 0.
 		* @return Returns the user-specific list.
 		* @see Parser::searchObjectInCustomList
 		*/
-		std::list<class Object*> getSpecificList(const enum List &list, const struct Comparator &comparator, const class Object *object = 0);
+		template<typename ComparatorType>
+		SpecificObjectList getSpecificList(List list, const class Object *object = 0);
+		ObjectList& getList(enum List list);
+		const ObjectList& getList(enum List list) const;
 
 		void add(class Comment *comment);
 		void add(class Keyword *keyword);
@@ -184,6 +195,7 @@ class Parser
 		void add(class Library *library);
 		void add(class SourceFile *sourceFile);
 		void add(class DocComment *docComment);
+		class Vjassdoc* parent() const;
 		class Type* integerType() const;
 		class Type* realType() const;
 		class Type* stringType() const;
@@ -195,7 +207,7 @@ class Parser
 		void add(class SyntaxError *syntaxError);
 
 		/**
-		* Parses line @param line from index @param index to the end of line and generates a list of possible objects.
+		* Parses line @p line from index @p index to the end of line and generates a list of possible objects.
 		* This can be useful for IDEs or other editors to create an auto completion for their users.
 		* @param line The code line.
 		* @param index Start index of code line for the parser.
@@ -212,35 +224,37 @@ class Parser
 #endif
 
 		static const char *title[Parser::MaxLists];
+		Object::IdType m_currentId;
+		class Vjassdoc *m_parent;
 		class Type *m_integerType;
 		class Type *m_realType;
 		class Type *m_stringType;
 		class Type *m_booleanType;
 		class Type *m_handleType;
 		class Type *m_codeType;
-		std::list<class Comment*> m_comments;
-		std::list<class Keyword*> m_keywords;
-		std::list<class Key*> m_keys;
-		std::list<class TextMacro*> m_textMacros;
-		std::list<class TextMacroInstance*> m_textMacroInstances;
-		std::list<class Type*> m_types;
-		std::list<class Local*> m_locals;
-		std::list<class Global*> m_globals;
-		std::list<class Member*> m_members;
-		std::list<class Parameter*> m_parameters;
-		std::list<class FunctionInterface*> m_functionInterfaces;
-		std::list<class Function*> m_functions;
-		std::list<class Method*> m_methods;
-		std::list<class Call*> m_calls;
-		std::list<class Implementation*> m_implementations;
-		std::list<class Hook*> m_hooks;
-		std::list<class Interface*> m_interfaces;
-		std::list<class Struct*> m_structs;
-		std::list<class Module*> m_modules;
-		std::list<class Scope*> m_scopes;
-		std::list<class Library*> m_libraries;
-		std::list<class SourceFile*> m_sourceFiles;
-		std::list<class DocComment*> m_docComments;
+		ObjectList m_comments;
+		ObjectList m_keywords;
+		ObjectList m_keys;
+		ObjectList m_textMacros;
+		ObjectList m_textMacroInstances;
+		ObjectList m_types;
+		ObjectList m_locals;
+		ObjectList m_globals;
+		ObjectList m_members;
+		ObjectList m_parameters;
+		ObjectList m_functionInterfaces;
+		ObjectList m_functions;
+		ObjectList m_methods;
+		ObjectList m_calls;
+		ObjectList m_implementations;
+		ObjectList m_hooks;
+		ObjectList m_interfaces;
+		ObjectList m_structs;
+		ObjectList m_modules;
+		ObjectList m_scopes;
+		ObjectList m_libraries;
+		ObjectList m_sourceFiles;
+		ObjectList m_docComments;
 		class SourceFile *m_currentSourceFile;
 		std::list<class SyntaxError*> m_syntaxErrors;
 #ifdef SQLITE
@@ -248,10 +262,9 @@ class Parser
 #endif
 
 		void parseFile(const std::string &path);
-		std::list<class Object*>& getList(enum List list);
 
 		//HTML
-		std::ostream& addObjectList(std::ostream &output, const enum Parser::List &list);
+		std::ostream& addObjectList(std::ostream &output, Parser::List list);
 
 		//SQLite
 #ifdef SQLITE
@@ -265,119 +278,130 @@ class Parser
 		void getLibraryRequirementList(const class Library *requirement, const std::string &prefix, std::ostream &ostream);
 };
 
-inline void Parser::add(class Comment *comment)
+template<typename ListType>
+Object* Parser::searchObjectInCustomList(ListType &objectList, const std::string &identifier, Parser::SearchMode searchMode, const Object *object)
 {
-	this->m_comments.push_back(comment);
+	if (objectList.size() == 0)
+		return 0;
+
+	boost::iterator_range<typename ListType::iterator> range = objectList.equal_range(identifier);
+
+	if (range.empty())
+		return 0;
+
+	Object *resultObject = 0;
+	bool checkContainer = false;
+	bool checkScope = false;
+	bool checkLibrary = false;
+
+	if ((object != 0 && object->container() != 0) || searchMode & CheckContainer)
+		checkContainer = true;
+
+	if ((object != 0 && object->scope() != 0) || searchMode & CheckScope)
+		checkScope = true;
+
+	if ((object != 0 && object->library() != 0) || searchMode & checkLibrary)
+		checkLibrary = true;
+
+	for (typename ListType::iterator iterator = range.begin(); iterator != range.end(); ++iterator)
+	{
+		if (resultObject == 0 && searchMode == Unspecified)
+		{
+			resultObject = iterator->second;
+
+			if (checkContainer)
+			{
+				if (resultObject->container() == object->container())
+					checkContainer = false;
+			}
+
+			if (checkScope)
+			{
+				if (resultObject->scope() == object->scope())
+					checkScope = false;
+			}
+
+			if (checkLibrary)
+			{
+				if (resultObject->library() == object->library())
+					checkLibrary = false;
+			}
+
+			//found the object
+			if (!checkContainer && !checkScope && !checkLibrary)
+				break;
+
+			continue;
+		}
+
+
+		if (checkContainer)
+		{
+			if (iterator->second->container() == object->container())
+			{
+				checkContainer = false;
+				resultObject = iterator->second;
+
+				continue;
+			}
+		}
+
+		if (checkScope)
+		{
+			if (iterator->second->scope() == object->container())
+			{
+				checkScope = false;
+				resultObject = iterator->second;
+
+				continue;
+			}
+		}
+
+		if (checkLibrary)
+		{
+			if (iterator->second->library() == object->library())
+			{
+				checkLibrary = false;
+				resultObject = iterator->second;
+
+				continue;
+			}
+		}
+	}
+
+	return resultObject;
 }
 
-inline void Parser::add(class Key *key)
+template<typename ComparatorType>
+Parser::SpecificObjectList Parser::getSpecificList(Parser::List list, const Object *object)
 {
-	this->m_keys.push_back(key);
+	ObjectList &objectList = this->getList(list);
+	SpecificObjectList result;
+	ComparatorType comp;
+
+	BOOST_FOREACH(ObjectList::reference ref, objectList)
+	{
+		if (comp(boost::polymorphic_cast<typename ComparatorType::first_argument_type>(ref.second), boost::polymorphic_cast<typename ComparatorType::second_argument_type>(object)))
+		{
+			SpecificObjectList::value_type value = SpecificObjectList::value_type(ref.first, ref.second);
+			result.insert(value);
+		}
+	}
+
+	return result;
 }
 
-inline void Parser::add(class Keyword *keyword)
+inline Object::IdType Parser::nextId()
 {
-	this->m_keywords.push_back(keyword);
+	Object::IdType result = m_currentId;
+	++m_currentId;
+
+	return result;
 }
 
-inline void Parser::add(class TextMacro *textMacro)
+inline class Vjassdoc* Parser::parent() const
 {
-	this->m_textMacros.push_back(textMacro);
-}
-
-inline void Parser::add(class TextMacroInstance *textMacroInstance)
-{
-	this->m_textMacroInstances.push_back(textMacroInstance);
-}
-
-inline void Parser::add(class Type *type)
-{
-	this->m_types.push_back(type);
-}
-
-inline void Parser::add(class Local *local)
-{
-	this->m_locals.push_back(local);
-}
-
-inline void Parser::add(class Global *global)
-{
-	this->m_globals.push_back(global);
-}
-
-inline void Parser::add(class Member *member)
-{
-	this->m_members.push_back(member);
-}
-
-inline void Parser::add(class Parameter *parameter)
-{
-	this->m_parameters.push_back(parameter);
-}
-
-inline void Parser::add(class FunctionInterface *functionInterface)
-{
-	this->m_functionInterfaces.push_back(functionInterface);
-}
-
-inline void Parser::add(class Function *function)
-{
-	this->m_functions.push_back(function);
-}
-
-inline void Parser::add(class Method *method)
-{
-	this->m_methods.push_back(method);
-}
-
-inline void Parser::add(class Call *call)
-{
-	this->m_calls.push_back(call);
-}
-
-inline void Parser::add(class Implementation *implementation)
-{
-	this->m_implementations.push_back(implementation);
-}
-
-inline void Parser::add(class Hook *hook)
-{
-	this->m_hooks.push_back(hook);
-}
-
-inline void Parser::add(class Interface *interface)
-{
-	this->m_interfaces.push_back(interface);
-}
-
-inline void Parser::add(class Struct *usedStruct)
-{
-	this->m_structs.push_back(usedStruct);
-}
-
-inline void Parser::add(class Module *module)
-{
-	this->m_modules.push_back(module);
-}
-
-inline void Parser::add(class Scope *scope)
-{
-	this->m_scopes.push_back(scope);
-}
-
-inline void Parser::add(class Library *library)
-{
-	this->m_libraries.push_back(library);
-}
-
-inline void Parser::add(class SourceFile *sourceFile)
-{
-	this->m_sourceFiles.push_back(sourceFile);
-}
-
-inline void Parser::add(class DocComment *docComment)
-{
-	this->m_docComments.push_back(docComment);
+	return this->m_parent;
 }
 
 inline class Type* Parser::integerType() const

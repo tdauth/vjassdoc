@@ -36,7 +36,7 @@ class Hook : public Object
 
 		static void initClass();
 #endif
-		Hook(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionExpression, const std::string &hookFunctionExpression);
+		Hook(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionExpression, const std::string &hookFunctionExpression);
 #ifdef SQLITE
 		Hook(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -48,9 +48,9 @@ class Hook : public Object
 		virtual std::string sqlStatement() const;
 #endif
 		class Function* function() const;
-		std::string functionExpression() const;
+		const std::string& functionExpression() const;
 		class Function* hookFunction() const;
-		std::string hookFunctionExpression() const;
+		const std::string& hookFunctionExpression() const;
 
 	private:
 		class Function *m_function;
@@ -64,7 +64,7 @@ inline class Function* Hook::function() const
 	return this->m_function;
 }
 
-inline std::string Hook::functionExpression() const
+inline const std::string& Hook::functionExpression() const
 {
 	return this->m_functionExpression;
 }
@@ -74,7 +74,7 @@ inline class Function* Hook::hookFunction() const
 	return this->m_hookFunction;
 }
 
-inline std::string Hook::hookFunctionExpression() const
+inline const std::string& Hook::hookFunctionExpression() const
 {
 	return this->m_hookFunctionExpression;
 }

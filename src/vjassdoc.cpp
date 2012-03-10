@@ -18,10 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <sys/time.h>
-#include <ctime>
 #include <iostream>
 #include <cstdio>
+
+#include <boost/scoped_ptr.hpp>
+#include <boost/timer.hpp>
+#include <boost/format.hpp>
 
 #include "vjassdoc.hpp"
 #include "internationalisation.hpp"
@@ -36,34 +38,8 @@ const bool Vjassdoc::supportsDatabaseCreation = true;
 #else
 const bool Vjassdoc::supportsDatabaseCreation = false;
 #endif
-class Parser *Vjassdoc::m_parser = 0;
-class Compiler *Vjassdoc::m_compiler = 0;
-unsigned int Vjassdoc::m_lines = 0;
-unsigned int Vjassdoc::m_files = 0;
-double Vjassdoc::m_duration = 0.0;
-double Vjassdoc::m_cpuDuration = 0.0;
-bool Vjassdoc::m_optionJass = false;
-bool Vjassdoc::m_optionDebug = true;
-bool Vjassdoc::m_optionPrivate = false;
-bool Vjassdoc::m_optionFunctions = false;
-bool Vjassdoc::m_optionTextmacros = false;
-bool Vjassdoc::m_optionHtml = false;
-bool Vjassdoc::m_optionPages = false;
-bool Vjassdoc::m_optionSpecialpages = false;
-bool Vjassdoc::m_optionSyntax = false;
-std::string Vjassdoc::m_optionCompile = "";
-std::string Vjassdoc::m_optionDatabase = "";
-bool Vjassdoc::m_optionVerbose = false;
-bool Vjassdoc::m_optionTime = false;
-bool Vjassdoc::m_optionAlphabetical = false;
-bool Vjassdoc::m_optionParseObjectsOfList[Parser::MaxLists];
-std::string Vjassdoc::m_optionTitle = "";
-std::string Vjassdoc::m_optionDir = "";
-std::list<std::string> Vjassdoc::m_optionImport = std::list<std::string>();
-std::list<std::string> Vjassdoc::m_optionFiles = std::list<std::string>();
-std::list<std::string> Vjassdoc::m_optionDatabases = std::list<std::string>();
 
-void Vjassdoc::configure(bool optionJass, bool optionDebug, bool optionPrivate, bool optionTextmacros, bool optionFunctions, bool optionHtml, bool optionPages, bool optionSpecialpages, bool optionSyntax, const std::string &optionCompile, const std::string &optionDatabase, bool optionVerbose, bool optionTime, bool optionAlphabetical, bool optionParseObjectsOfList[Parser::MaxLists], const std::string &optionTitle, const std::string &optionDir, std::list<std::string> optionImport, std::list<std::string> optionFiles, std::list<std::string> optionDatabases)
+Vjassdoc::Vjassdoc(bool optionJass, bool optionDebug, bool optionPrivate, bool optionTextmacros, bool optionFunctions, bool optionHtml, bool optionPages, bool optionSpecialpages, bool optionSyntax, const std::string &optionCompile, const std::string &optionDatabase, bool optionVerbose, bool optionTime, bool optionAlphabetical, bool optionParseObjectsOfList[Parser::MaxLists], const std::string &optionTitle, const std::string &optionDir, std::list<std::string> optionImport, std::list<std::string> optionFiles, std::list<std::string> optionDatabases) : m_parser(0), m_compiler(0)
 {
 	Vjassdoc::m_optionJass = optionJass;
 	Vjassdoc::m_optionDebug = optionDebug;
@@ -88,6 +64,33 @@ void Vjassdoc::configure(bool optionJass, bool optionDebug, bool optionPrivate, 
 	Vjassdoc::m_optionImport = optionImport;
 	Vjassdoc::m_optionFiles = optionFiles;
 	Vjassdoc::m_optionDatabases = optionDatabases;
+}
+
+Vjassdoc::Vjassdoc()
+{
+	Vjassdoc::m_optionJass = false;
+	Vjassdoc::m_optionDebug = false;
+	Vjassdoc::m_optionPrivate = false;
+	Vjassdoc::m_optionTextmacros = false;
+	Vjassdoc::m_optionFunctions = false;
+	Vjassdoc::m_optionHtml = false;
+	Vjassdoc::m_optionPages = false;
+	Vjassdoc::m_optionSpecialpages = false;
+	Vjassdoc::m_optionSyntax = false;
+	Vjassdoc::m_optionCompile = "";
+	Vjassdoc::m_optionDatabase = "";
+	Vjassdoc::m_optionVerbose = false;
+	Vjassdoc::m_optionTime = false;
+	Vjassdoc::m_optionAlphabetical = false;
+
+	for (int i = 0; i < Parser::MaxLists; ++i)
+		Vjassdoc::m_optionParseObjectsOfList[i] = false;
+
+	Vjassdoc::m_optionTitle = "";
+	Vjassdoc::m_optionDir = "";
+	Vjassdoc::m_optionImport = std::list<std::string>();
+	Vjassdoc::m_optionFiles = std::list<std::string>();
+	Vjassdoc::m_optionDatabases = std::list<std::string>();
 }
 
 #ifdef SQLITE
@@ -124,19 +127,11 @@ void Vjassdoc::run()
 {
 	Vjassdoc::m_lines = 0;
 	Vjassdoc::m_files = 0;
-	Vjassdoc::m_duration = 0.0;
-	Vjassdoc::m_cpuDuration = 0.0;
 
-	timeval timeValue;
-	long beginMicroseconds, endMicroseconds;
-	clock_t beginCpu, endCpu;
+	boost::scoped_ptr<boost::timer> timer;
 
 	if (Vjassdoc::optionTime())
-	{
-		gettimeofday(&timeValue, 0);
-		beginMicroseconds = long(1e6) * timeValue.tv_sec + timeValue.tv_usec;
-		beginCpu = clock();
-	}
+		timer.reset(new boost::timer());
 
 #ifdef SQLITE
 	if (!Vjassdoc::optionDatabases().empty())
@@ -172,19 +167,12 @@ void Vjassdoc::run()
 		Vjassdoc::compiler()->compile();
 
 	if (Vjassdoc::optionTime())
-	{
-		gettimeofday(&timeValue, 0);
-		endMicroseconds = long(1e6) * timeValue.tv_sec + timeValue.tv_usec;
-		endCpu = clock();
-		Vjassdoc::m_duration = (double)(endMicroseconds - beginMicroseconds) / double(1e6);
-		Vjassdoc::m_cpuDuration = (double)(endCpu - beginCpu) / double(CLOCKS_PER_SEC);
-		printf(_("Duration:\n%f seconds\nCPU duration:\n%f seconds\n"), Vjassdoc::m_duration, Vjassdoc::m_cpuDuration);
-	}
+		std::cout << boost::format(_("Duration: %1% ms")) % timer->elapsed() << std::endl;
 
-	printf(_("Finished (%d lines, %d files).\n"), Vjassdoc::m_lines, Vjassdoc::m_files);
+	std::cout << boost::format(_("Finished (%1% lines, %2% files).")) % Vjassdoc::m_lines % Vjassdoc::m_files << std::endl;
 }
 
-void Vjassdoc::clear()
+Vjassdoc::~Vjassdoc()
 {
 	if (Vjassdoc::m_parser != 0)
 	{

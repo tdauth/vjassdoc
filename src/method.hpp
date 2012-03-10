@@ -37,7 +37,7 @@ class Method : public Function
 		static void initClass();
 #endif
 		/// isNative is always false.
-		Method(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression, bool isPublic, bool isConstant, class Object *container, bool isStatic, bool isStub, bool isOperator, const std::string &defaultReturnValueExpression);
+		Method(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression, bool isPublic, bool isConstant, class Object *container, bool isStatic, bool isStub, bool isOperator, const std::string &defaultReturnValueExpression);
 #ifdef SQLITE
 		Method(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -52,7 +52,7 @@ class Method : public Function
 		bool isStub() const;
 		bool isOperator() const;
 		class Object* defaultReturnValue() const; //Type, Function Interface, Interface, Struct, Literal
-		std::string defaultReturnValueExpression() const;
+		const std::string& defaultReturnValueExpression() const;
 
 	protected:
 		bool isNative() const; //do not use
@@ -85,7 +85,7 @@ inline class Object* Method::defaultReturnValue() const
 	return this->m_defaultReturnValue;
 }
 
-inline std::string Method::defaultReturnValueExpression() const
+inline const std::string& Method::defaultReturnValueExpression() const
 {
 	return this->m_defaultReturnValueExpression;
 }

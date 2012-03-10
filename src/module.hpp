@@ -36,7 +36,7 @@ class Module : public Interface
 
 		static void initClass();
 #endif
-		Module(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
+		Module(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate);
 #ifdef SQLITE
 		Module(std::vector<const unsigned char*> &columnVector);
 #endif

@@ -19,8 +19,8 @@
  ***************************************************************************/
 
 #include <sstream>
-#include <list>
-#include <iostream> //debug
+
+#include <boost/foreach.hpp>
 
 #include "objects.hpp"
 #include "internationalisation.hpp"
@@ -36,23 +36,17 @@ unsigned int Library::sqlColumns;
 std::string Library::sqlColumnStatement;
 #endif
 
-bool Library::HasRequirement::operator()(class Object *thisObject, class Object *library) const
+bool Library::HasRequirement::operator()(const Library *thisObject, const Library *library) const
 {
-	std::cout << "This object is " << thisObject->identifier() << " and library is " << library->identifier() << std::endl;
-	
-	class Library *thisLibrary = static_cast<class Library*>(thisObject);
-
-	if (thisLibrary->requirement() != 0)
+	if (thisObject->requirements().get() != 0)
 	{
-		std::cout << "Requirement is not 0." << std::endl;
-		
-		for (std::list<class Library*>::iterator iterator = thisLibrary->requirement()->begin(); iterator != thisLibrary->requirement()->end(); ++iterator)
+		BOOST_FOREACH(Library::RequirementsContainer::const_reference ref, *thisObject->requirements())
 		{
-			if (*iterator == static_cast<class Library*>(library))
+			if (ref.library() == library)
 				return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -68,57 +62,46 @@ void Library::initClass()
 }
 #endif
 
-Library::Library(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, DocComment *docComment, bool isOnce, const std::string &initializerExpression, std::list<std::string> *requirementExpressions, std::list<bool> *optionalRequirement) : Object(identifier, sourceFile, line, docComment), m_isOnce(isOnce), initializerExpression(initializerExpression), requirementExpressions(requirementExpressions), m_initializer(0), m_requirement(0), m_optionalRequirement(optionalRequirement)
+Library::Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, DocComment *docComment, bool isOnce, const std::string &initializerExpression, RequirementsContainer *requirements) : Object(parser, identifier, sourceFile, line, docComment), m_isOnce(isOnce), initializerExpression(initializerExpression), m_initializer(0), m_requirements(requirements)
 {
 }
 
 #ifdef SQLITE
-Library::Library(std::vector<const unsigned char*> &columnVector) : Object(columnVector), requirementExpressions(0), m_initializer(0), m_requirement(0), m_optionalRequirement(0)
+Library::Library(std::vector<const unsigned char*> &columnVector) : Object(columnVector), m_initializer(0)
 {
 }
 #endif
 
 Library::~Library()
 {
-	if (this->requirementExpressions != 0)
-		delete this->requirementExpressions;
-	
-	if (this->m_requirement != 0)
-		delete this->m_requirement;
-	
-	if (this->m_optionalRequirement != 0)
-		delete this->m_optionalRequirement;
 }
 
 void Library::init()
 {
 	if (!this->initializerExpression.empty())
 	{
-		this->m_initializer = static_cast<Function*>(this->searchObjectInList(this->initializerExpression, Parser::Functions));
-		
+		this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
+
 		if (this->m_initializer == 0)
-			this->m_initializer = static_cast<Function*>(this->searchObjectInList(this->initializerExpression, Parser::Methods));
-		
+			this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
+
 		if (this->m_initializer != 0)
 			this->initializerExpression.clear();
 	}
 	else
 		this->initializerExpression = '-';
-	
-	if (this->requirementExpressions != 0)
-	{
-		this->m_requirement = new std::list<Library*>;
-		std::list<std::string>::iterator expressionIterator = this->requirementExpressions->begin();
-		
-		while (expressionIterator != this->requirementExpressions->end())
-		{
-			class Library *object = static_cast<Library*>(this->searchObjectInList(*expressionIterator, Parser::Libraries));
-			
-			if (object != 0)
-				(*expressionIterator).clear();
 
-			this->m_requirement->push_back(object);
-			++expressionIterator;
+	if (this->requirements().get() != 0 && !this->requirements()->empty())
+	{
+		BOOST_FOREACH(RequirementsContainer::reference ref, *this->requirements())
+		{
+			Library *object = boost::polymorphic_cast<Library*>(this->parser()->searchObjectInList(ref.expression(), Parser::Libraries, this));
+
+			if (object != 0)
+			{
+				ref.expression().clear();
+				ref.setLibrary(object);
+			}
 		}
 	}
 }
@@ -159,203 +142,200 @@ void Library::page(std::ofstream &file) const
 	<< "\t\t" << Object::objectPageLink(this->initializer(), this->initializerExpression) << '\n'
 	<< "\t\t<h2><a name=\"Requirement\">" << _("Requirement") << "</a></h2>\n"
 	;
-	
-	if (this->requirement() != 0)
+
+	if (this->requirements().get() != 0 && !this->requirements()->empty())
 	{
 		file << "\t\t<ul>\n";
-		std::list<std::string>::iterator expressionIterator = this->requirementExpressions->begin();
-		std::list<bool>::iterator optionalIterator = this->optionalRequirement()->begin();
-	
-		for (std::list<class Library*>::iterator iterator = this->requirement()->begin(); iterator != this->requirement()->end(); ++iterator, ++expressionIterator, ++optionalIterator)
+		BOOST_FOREACH(RequirementsContainer::const_reference ref, *this->requirements())
 		{
 			file << "\t\t\t<li>";
-			
-			if (*optionalIterator)
+
+			if (ref.isOptional())
 				file << "optional ";
-			
-			file << Object::objectPageLink(*iterator, *expressionIterator) << "</li>\n";
+
+			file << Object::objectPageLink(ref.library(), ref.expression()) << "</li>\n";
 		}
-		
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t<p>-</p>\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Keywords\">" << _("Keywords") << "</a></h2>\n"
 	;
-	
-	std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Keywords, Object::IsInLibrary(), this);
-	
+
+	Parser::SpecificObjectList list = parser()->getSpecificList<IsInLibrary>(Parser::Keywords, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Text Macros\">" << _("Text Macros") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::TextMacros, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::TextMacros, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Text Macro Instances\">" << _("Text Macro Instances") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::TextMacroInstances, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::TextMacroInstances, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Types\">" << _("Types") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Types, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Types, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Globals\">" << _("Globals") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Globals, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Globals, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Function Interfaces\">" << _("Function Interfaces") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::FunctionInterfaces, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::FunctionInterfaces, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Functions\">" << _("Functions") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Functions, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Functions, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Interfaces\">" << _("Interfaces") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Interfaces, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Interfaces, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Structs\">" << _("Structs") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Structs, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Structs, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
 		file << "\t\t-\n";
-	
+
 	file
 	<< "\t\t<h2><a name=\"Scopes\">" << _("Scopes") << "</a></h2>\n"
 	;
-	
-	list = Vjassdoc::parser()->getSpecificList(Parser::Scopes, Object::IsInLibrary(), this);
-	
+
+	list = parser()->getSpecificList<IsInLibrary>(Parser::Scopes, this);
+
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
-	
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
-		
+
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
+
 		file << "\t\t</ul>\n";
 	}
 	else
@@ -381,12 +361,12 @@ std::string Library::sqlStatement() const
 	<< Object::sqlStatement() << ", "
 	<< "IsOnce=" << this->isOnce() << ", "
 	<< "Initializer=" << Object::objectId(this->initializer()) << ", ";
-	
+
 	if (this->requirement() != 0)
 		sstream << "Requirement=" << Object::objectId(this->requirement()->front()); //Array
 	else
 		sstream << "Requirement=-1";
-	
+
 	return sstream.str();
 }
 #endif

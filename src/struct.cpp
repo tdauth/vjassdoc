@@ -20,6 +20,9 @@
 
 #include <sstream>
 
+#include <boost/cast.hpp>
+#include <boost/foreach.hpp>
+
 #include "objects.hpp"
 #include "file.hpp"
 #include "internationalisation.hpp"
@@ -28,9 +31,9 @@
 namespace vjassdoc
 {
 
-bool Struct::HasExtension::operator()(const class Object *thisObject, const class Object *extension) const
+bool Struct::HasExtension::operator()(const Struct *thisObject, const Interface *extension) const
 {
-	return static_cast<const class Struct*>(thisObject)->extension() == static_cast<const class Interface*>(extension);
+	return thisObject->extension() == extension;
 }
 
 #ifdef SQLITE
@@ -52,7 +55,7 @@ void Struct::initClass()
 }
 #endif
 
-Struct::Struct(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, const std::string &sizeExpression, const std::string &extensionExpression) : Interface(identifier, sourceFile, line, docComment, library, scope, isPrivate), m_size(0), m_sizeExpression(sizeExpression), m_extension(0), m_extensionExpression(extensionExpression), m_constructor(0), m_destructor(0), m_initializer(0)
+Struct::Struct(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, const std::string &sizeExpression, const std::string &extensionExpression) : Interface(parser, identifier, sourceFile, line, docComment, library, scope, isPrivate), m_size(0), m_sizeExpression(sizeExpression), m_extension(0), m_extensionExpression(extensionExpression), m_constructor(0), m_destructor(0), m_initializer(0)
 {
 }
 
@@ -68,7 +71,7 @@ void Struct::init()
 
 	if (!this->sizeExpression().empty())
 	{
-		this->m_size = this->findValue(static_cast<class Object*>(Vjassdoc::parser()->integerType()), this->m_sizeExpression);
+		this->m_size = this->findValue(parser()->integerType(), this->m_sizeExpression);
 
 		if (this->m_size != 0)
 			this->m_sizeExpression.clear();
@@ -78,19 +81,19 @@ void Struct::init()
 
 	if (!this->m_extensionExpression.empty() && this->m_extensionExpression.find(File::expressionText[File::ArrayExpression]) != 0)
 	{
-		this->m_extension = static_cast<class Interface*>(this->searchObjectInList(this->m_extensionExpression, Parser::Interfaces));
+		this->m_extension = boost::polymorphic_cast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Interfaces, this));
 
 		if (this->m_extension == 0)
-			this->m_extension = static_cast<class Interface*>(this->searchObjectInList(this->m_extensionExpression, Parser::Structs));
+			this->m_extension = boost::polymorphic_cast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Structs, this));
 
 		if (this->m_extension != 0)
 			this->m_extensionExpression.clear();
 	}
 
 	m_container = this;
-	this->m_constructor = static_cast<class Method*>(this->searchObjectInList("create", Parser::Methods, Parser::CheckContainer));
-	this->m_destructor = static_cast<class Method*>(this->searchObjectInList("onDestroy", Parser::Methods, Parser::CheckContainer));
-	this->m_initializer = static_cast<class Method*>(this->searchObjectInList("onInit", Parser::Methods, Parser::CheckContainer));
+	this->m_constructor = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("create", Parser::Methods, Parser::CheckContainer, this));
+	this->m_destructor = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("onDestroy", Parser::Methods, Parser::CheckContainer, this));
+	this->m_initializer = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("onInit", Parser::Methods, Parser::CheckContainer, this));
 }
 
 void Struct::pageNavigation(std::ofstream &file) const
@@ -139,14 +142,14 @@ void Struct::page(std::ofstream &file) const
 	<< "\t\t<h2><a name=\"Child Structs\">" << _("Child Structs") << "</a></h2>\n"
 	;
 
-	std::list<class Object*> list = Vjassdoc::parser()->getSpecificList(Parser::Structs, Struct::HasExtension(), this);
+	Parser::SpecificObjectList list = parser()->getSpecificList<HasExtension>(Parser::Structs, this);
 
 	if (!list.empty())
 	{
 		file << "\t\t<ul>\n";
 
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
-			file << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
+		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, list)
+			file << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
 
 		file << "\t\t</ul>\n";
 	}
@@ -160,38 +163,39 @@ void Struct::page(std::ofstream &file) const
 	<< "\t\t" << Object::objectPageLink(this->destructor()) << '\n'
 	<< "\t\t<h2><a name=\"Initializer\">" << _("Initializer") << "</a></h2>\n"
 	<< "\t\t" << Object::objectPageLink(this->initializer()) << '\n'
-	<< "\t\t<h2><a name=\"Inherited Members\">" << _("Inherited Members") << "</a></h2>\n"
 	;
 
-	if (this->extension() != 0 &&  dynamic_cast<class Struct*>(this->extension()) != 0)
+	if (this->extension() != 0 && dynamic_cast<Struct*>(this->extension()) != 0)
 	{
-		class Struct *extension = static_cast<class Struct*>(this->extension());
+		Struct *extension = static_cast<Struct*>(this->extension());
+		Parser::SpecificObjectList memberList, methodList;
+
 
 		do
 		{
-			extension->getMemberList(file);
+			Parser::SpecificObjectList newMembers = parser()->getSpecificList<IsInContainer>(Parser::Members, extension);
+			memberList.insert(newMembers.begin(), newMembers.end());
+			Parser::SpecificObjectList newMethods = parser()->getSpecificList<IsInContainer>(Parser::Methods, extension);
+			methodList.insert(newMethods.begin(), newMethods.end());
 
-			if (extension->extension() != 0 && dynamic_cast<class Struct*>(extension->extension()) != 0)
-				extension = static_cast<class Struct*>(extension->extension());
+			if (extension->extension() != 0 && dynamic_cast<Struct*>(extension->extension()) != 0)
+				extension = static_cast<Struct*>(extension->extension());
 			else
 				break;
 		}
 		while (true);
 
-		file << "\t\t<h2><a name=\"Inherited Methods\">" << _("Inherited Methods") << "</a></h2>\n";
-
-		extension = static_cast<class Struct*>(this->extension()); //do not check at twice
-
-		do
+		if (!memberList.empty())
 		{
-			extension->getMethodList(file);
-
-			if (extension->extension() != 0 && dynamic_cast<class Struct*>(extension->extension()) != 0)
-				extension = static_cast<class Struct*>(extension->extension());
-			else
-				break;
+			file << "\t\t<h2><a name=\"Inherited Members\">" << _("Inherited Members") << "</a></h2>\n";
+			this->getMemberList(file, memberList);
 		}
-		while (true);
+
+		if (!methodList.empty())
+		{
+			file << "\t\t<h2><a name=\"Inherited Methods\">" << _("Inherited Methods") << "</a></h2>\n";
+			this->getMethodList(file, methodList);
+		}
 	}
 	else
 	{

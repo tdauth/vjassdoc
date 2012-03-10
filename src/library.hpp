@@ -21,6 +21,8 @@
 #ifndef VJASSDOC_LIBRARY_HPP
 #define VJASSDOC_LIBRARY_HPP
 
+#include <boost/scoped_ptr.hpp>
+
 #include "object.hpp"
 
 namespace vjassdoc
@@ -29,19 +31,39 @@ namespace vjassdoc
 class Library : public Object
 {
 	public:
-		struct HasRequirement : public Parser::Comparator
+		struct HasRequirement : public std::binary_function<const Library*, const Library*, bool>
 		{
-			virtual bool operator()(class Object *thisObject, class Object *library) const;
+			virtual bool operator()(const Library *thisObject, const Library *library) const;
 		};
 
-#ifdef SQLITE	
+		class Requirement
+		{
+			public:
+				Requirement(const std::string &expression, Library *library, bool isOptional);
+
+				std::string& expression();
+				const std::string& expression() const;
+				void setLibrary(Library *library);
+				Library* library() const;
+				bool isOptional() const;
+
+			private:
+				std::string m_expression;
+				Library *m_library;
+				bool m_isOptional;
+		};
+
+		typedef std::list<Requirement> RequirementsContainer;
+		typedef boost::scoped_ptr<RequirementsContainer> Requirements;
+
+#ifdef SQLITE
 		static const char *sqlTableName;
 		static unsigned int sqlColumns;
 		static std::string sqlColumnStatement;
 
 		static void initClass();
 #endif
-		Library(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &initializerExpression, std::list<std::string> *requirementExpressions, std::list<bool> *optionalRequirement);
+		Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &initializerExpression, RequirementsContainer *requirements);
 		Library(std::vector<const unsigned char*> &columnVector);
 		virtual ~Library();
 		virtual void init();
@@ -52,18 +74,46 @@ class Library : public Object
 #endif
 		bool isOnce() const;
 		class Function* initializer() const; //Function, Method (static)
-		std::list<class Library*>* requirement() const;
-		std::list<bool>* optionalRequirement() const;
-	
+		Requirements& requirements();
+		const Requirements& requirements() const;
+
 	protected:
 		bool m_isOnce;
 		std::string initializerExpression;
-		std::list<std::string> *requirementExpressions;
 
 		class Function *m_initializer; //Function is the parent class of Method, so it can be a method, too.
-		std::list<class Library*> *m_requirement;
-		std::list<bool> *m_optionalRequirement;
+		Requirements m_requirements;
 };
+
+inline Library::Requirement::Requirement(const std::string &expression, Library *library, bool isOptional) : m_expression(expression), m_library(library), m_isOptional(isOptional)
+{
+
+}
+
+inline std::string& Library::Requirement::expression()
+{
+	return m_expression;
+}
+
+inline const std::string& Library::Requirement::expression() const
+{
+	return m_expression;
+}
+
+inline void Library::Requirement::setLibrary(Library *library)
+{
+	this->m_library = library;
+}
+
+inline Library* Library::Requirement::library() const
+{
+	return m_library;
+}
+
+inline bool Library::Requirement::isOptional() const
+{
+	return m_isOptional;
+}
 
 inline bool Library::isOnce() const
 {
@@ -75,14 +125,14 @@ inline class Function* Library::initializer() const
 	return this->m_initializer;
 }
 
-inline std::list<class Library*>* Library::requirement() const
+inline Library::Requirements& Library::requirements()
 {
-	return this->m_requirement;
+	return m_requirements;
 }
 
-inline std::list<bool>* Library::optionalRequirement() const
+inline const Library::Requirements& Library::requirements() const
 {
-	return this->m_optionalRequirement;
+	return this->m_requirements;
 }
 
 }

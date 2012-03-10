@@ -24,6 +24,13 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+
+#include <boost/scoped_ptr.hpp>
+#include <boost/format.hpp>
+#include <boost/foreach.hpp>
+#include <boost/cast.hpp>
+#include <boost/range.hpp>
+
 #ifdef SQLITE
 #include <sqlite3.h>
 #endif
@@ -67,112 +74,17 @@ const char *Parser::title[Parser::MaxLists] =
 	_("Documentation Comments")
 };
 
-bool Parser::Comparator::operator()(const class Object *thisObject, const class Object *otherObject) const
-{
-	return true;
-}
-
-class Object* Parser::searchObjectInCustomList(const std::list<class Object*> &objectList, const std::string &identifier, const enum Parser::SearchMode &searchMode, const class Object *object)
-{
-	if (objectList.size() == 0)
-		return 0;
-
-	class Object *resultObject = 0;
-	bool checkContainer = false;
-	bool checkScope = false;
-	bool checkLibrary = false;
-
-	if ((object != 0 && object->container() != 0) || searchMode & CheckContainer)
-		checkContainer = true;
-
-	if ((object != 0 && object->scope() != 0) || searchMode & CheckScope)
-		checkScope = true;
-
-	if ((object != 0 && object->library() != 0) || searchMode & checkLibrary)
-		checkLibrary = true;
-
-	for (std::list<class Object*>::const_iterator iterator = objectList.begin(); iterator != objectList.end(); ++iterator)
-	{
-		if ((*iterator)->identifier() == identifier)
-		{
-			if (resultObject == 0 && searchMode == Unspecified)
-			{
-				resultObject = *iterator;
-
-				if (checkContainer)
-				{
-					if (resultObject->container() == object->container())
-						checkContainer = false;
-				}
-
-				if (checkScope)
-				{
-					if (resultObject->scope() == object->scope())
-						checkScope = false;
-				}
-
-				if (checkLibrary)
-				{
-					if (resultObject->library() == object->library())
-						checkLibrary = false;
-				}
-
-				//found the object
-				if (!checkContainer && !checkScope && !checkLibrary)
-					break;
-
-				continue;
-			}
-
-
-			if (checkContainer)
-			{
-				if ((*iterator)->container() == object->container())
-				{
-					checkContainer = false;
-					resultObject = *iterator;
-
-					continue;
-				}
-			}
-
-			if (checkScope)
-			{
-				if ((*iterator)->scope() == object->container())
-				{
-					checkScope = false;
-					resultObject = *iterator;
-
-					continue;
-				}
-			}
-
-			if (checkLibrary)
-			{
-				if ((*iterator)->library() == object->library())
-				{
-					checkLibrary = false;
-					resultObject = *iterator;
-
-					continue;
-				}
-			}
-		}
-	}
-
-	return resultObject;
-}
-
-Parser::Parser() :
-		m_integerType(new Type("integer", 0, 0, 0, "", "")),
-		m_realType(new Type("real", 0, 0, 0, "", "")),
-		m_stringType(new Type("string", 0, 0, 0, "", "")),
-		m_booleanType(new Type("boolean", 0, 0, 0, "", "")),
-		m_handleType(new Type("handle", 0, 0, 0, "", "")),
-		m_codeType(new Type("code", 0, 0, 0, "", ""))
+Parser::Parser(Vjassdoc *parent) : m_parent(parent),
+		m_currentId(0),
+		m_integerType(new Type(this, "integer", 0, 0, 0, "", "")),
+		m_realType(new Type(this, "real", 0, 0, 0, "", "")),
+		m_stringType(new Type(this, "string", 0, 0, 0, "", "")),
+		m_booleanType(new Type(this, "boolean", 0, 0, 0, "", "")),
+		m_handleType(new Type(this, "handle", 0, 0, 0, "", "")),
+		m_codeType(new Type(this, "code", 0, 0, 0, "", ""))
 {
 	//add default types
-	if (Vjassdoc::optionVerbose())
+	if (parent->optionVerbose())
 		std::cout << _("Adding default Jass types.") << std::endl;
 
 	this->add(m_integerType);
@@ -186,102 +98,6 @@ Parser::Parser() :
 //Default Jass types are in lists!
 Parser::~Parser()
 {
-
-	for (std::list<class Comment*>::iterator iterator = this->m_comments.begin(); iterator != this->m_comments.end(); ++iterator)
-		delete *iterator;
-
-	this->m_comments.clear();
-
-	for (std::list<class Keyword*>::iterator iterator = this->m_keywords.begin(); iterator != this->m_keywords.end(); ++iterator)
-		delete *iterator;
-
-	this->m_keywords.clear();
-
-	for (std::list<class TextMacro*>::iterator iterator = this->m_textMacros.begin(); iterator != this->m_textMacros.end(); ++iterator)
-		delete *iterator;
-
-	this->m_textMacros.clear();
-
-	for (std::list<class TextMacroInstance*>::iterator iterator = this->m_textMacroInstances.begin(); iterator != this->m_textMacroInstances.end(); ++iterator)
-		delete *iterator;
-
-	this->m_textMacroInstances.clear();
-
-	for (std::list<class Type*>::iterator iterator = this->m_types.begin(); iterator != this->m_types.end(); ++iterator)
-		delete *iterator;
-
-	this->m_types.clear();
-
-	for (std::list<class Global*>::iterator iterator = this->m_globals.begin(); iterator != this->m_globals.end(); ++iterator)
-		delete *iterator;
-
-	this->m_globals.clear();
-
-	for (std::list<class Member*>::iterator iterator = this->m_members.begin(); iterator != this->m_members.end(); ++iterator)
-		delete *iterator;
-
-	this->m_members.clear();
-
-	for (std::list<class Parameter*>::iterator iterator = this->m_parameters.begin(); iterator != this->m_parameters.end(); ++iterator)
-		delete *iterator;
-
-	this->m_parameters.clear();
-
-	for (std::list<class FunctionInterface*>::iterator iterator = this->m_functionInterfaces.begin(); iterator != this->m_functionInterfaces.end(); ++iterator)
-		delete *iterator;
-
-	this->m_functionInterfaces.clear();
-
-	for (std::list<class Function*>::iterator iterator = this->m_functions.begin(); iterator != this->m_functions.end(); ++iterator)
-		delete *iterator;
-
-	this->m_functions.clear();
-
-	for (std::list<class Method*>::iterator iterator = this->m_methods.begin(); iterator != this->m_methods.end(); ++iterator)
-		delete *iterator;
-
-	this->m_methods.clear();
-
-	for (std::list<class Call*>::iterator iterator = this->m_calls.begin(); iterator != this->m_calls.end(); ++iterator)
-		delete *iterator;
-
-	this->m_calls.clear();
-
-	for (std::list<class Implementation*>::iterator iterator = this->m_implementations.begin(); iterator != this->m_implementations.end(); ++iterator)
-		delete *iterator;
-
-	this->m_implementations.clear();
-
-	for (std::list<class Interface*>::iterator iterator = this->m_interfaces.begin(); iterator != this->m_interfaces.end(); ++iterator)
-		delete *iterator;
-
-	this->m_interfaces.clear();
-
-	for (std::list<class Struct*>::iterator iterator = this->m_structs.begin(); iterator != this->m_structs.end(); ++iterator)
-		delete *iterator;
-
-	this->m_structs.clear();
-
-	for (std::list<class Scope*>::iterator iterator = this->m_scopes.begin(); iterator != this->m_scopes.end(); ++iterator)
-		delete *iterator;
-
-	this->m_scopes.clear();
-
-	for (std::list<class Library*>::iterator iterator = this->m_libraries.begin(); iterator != this->m_libraries.end(); ++iterator)
-		delete *iterator;
-
-	this->m_libraries.clear();
-
-	for (std::list<class SourceFile*>::iterator iterator = this->m_sourceFiles.begin(); iterator != this->m_sourceFiles.end(); ++iterator)
-		delete *iterator;
-
-	this->m_sourceFiles.clear();
-
-	for (std::list<class DocComment*>::iterator iterator = this->m_docComments.begin(); iterator != this->m_docComments.end(); ++iterator)
-		delete *iterator;
-
-	this->m_docComments.clear();
-
 #ifdef SQLITE
 	for (std::vector<struct Database*>::iterator iterator = this->m_databases.begin(); iterator != this->m_databases.end(); ++iterator)
 		delete *iterator;
@@ -292,7 +108,7 @@ Parser::~Parser()
 
 void Parser::createInheritanceListPage()
 {
-	std::ofstream fstream((Vjassdoc::optionDir() + dirSeparator + "inheritancelist.html").c_str());
+	std::ofstream fstream((parent()->optionDir() + dirSeparator + "inheritancelist.html").c_str());
 
 	if (!fstream)
 	{
@@ -318,10 +134,10 @@ void Parser::createInheritanceListPage()
 	{
 		fstream << "\t\t<ul>\n";
 
-		for (std::list<class Interface*>::iterator iterator = this->m_interfaces.begin(); iterator != this->m_interfaces.end(); ++iterator)
+		BOOST_FOREACH(ObjectList::reference ref, this->m_interfaces)
 		{
-			fstream << "\t\t\t<li>" << (*iterator)->pageLink() << '\n';
-			this->getStructInheritanceList(*iterator, "\t\t\t\t", fstream);
+			fstream << "\t\t\t<li>" << ref.second->pageLink() << '\n';
+			this->getStructInheritanceList(boost::polymorphic_cast<Interface*>(ref.second), "\t\t\t\t", fstream);
 			fstream << "\t\t\t</li>\n";
 		}
 
@@ -337,12 +153,12 @@ void Parser::createInheritanceListPage()
 	{
 		fstream << "\t\t<ul>\n";
 
-		for (std::list<class Struct*>::iterator iterator = this->m_structs.begin(); iterator != this->m_structs.end(); ++iterator)
+		BOOST_FOREACH(ObjectList::reference ref, this->m_structs)
 		{
-			if ((*iterator)->extension() == 0)
+			if (boost::polymorphic_cast<Struct*>(ref.second)->extension() == 0)
 			{
-				fstream << "\t\t\t<li>" << (*iterator)->pageLink() << '\n';
-				this->getStructInheritanceList(*iterator, "\t\t\t\t", fstream);
+				fstream << "\t\t\t<li>" << ref.second->pageLink() << '\n';
+				this->getStructInheritanceList(boost::polymorphic_cast<Struct*>(ref.second), "\t\t\t\t", fstream);
 				fstream << "\t\t\t</li>\n";
 			}
 		}
@@ -362,7 +178,7 @@ void Parser::createInheritanceListPage()
 
 void Parser::createRequirementListPage()
 {
-	std::ofstream fstream((Vjassdoc::optionDir() + dirSeparator + "requirementlist.html").c_str());
+	std::ofstream fstream((parent()->optionDir() + dirSeparator + "requirementlist.html").c_str());
 
 	if (!fstream)
 	{
@@ -380,14 +196,16 @@ void Parser::createRequirementListPage()
 	<< "\t\t<ul>\n"
 	;
 
-	for (std::list<class Library*>::iterator iterator = this->m_libraries.begin(); iterator != this->m_libraries.end(); ++iterator)
+	BOOST_FOREACH(ObjectList::reference ref, this->m_libraries)
 	{
+		Library *library = boost::polymorphic_cast<Library*>(ref.second);
+
 		//requirement has to be 0
-		if ((*iterator)->requirement() != 0)
+		if (library->requirements().get() != 0 && !library->requirements()->empty())
 			continue;
 
-		fstream << "\t\t\t<li>" << (*iterator)->pageLink() << '\n';
-		this->getLibraryRequirementList(*iterator, "\t\t\t\t", fstream);
+		fstream << "\t\t\t<li>" << library->pageLink() << '\n';
+		this->getLibraryRequirementList(library, "\t\t\t\t", fstream);
 		fstream << "\t\t\t</li>\n";
 	}
 
@@ -403,35 +221,34 @@ void Parser::createRequirementListPage()
 void Parser::showSyntaxErrors()
 {
 	/// @todo compare all object identifiers with Jass and vJass keywords.
-	fprintf(stdout, _("%d syntax errors.\n"), this->m_syntaxErrors.size());
+	std::cout << boost::format(_("%1% syntax errors.")) % this->m_syntaxErrors.size() << std::endl;
 	this->m_syntaxErrors.sort(SyntaxError::Comparator);
 
-	for (std::list<class SyntaxError*>::iterator iterator = this->m_syntaxErrors.begin(); iterator != this->m_syntaxErrors.end(); ++iterator)
-	{
-		fprintf(stdout, _("File %s, line %d: %s\n"), (*iterator)->sourceFile()->identifier().c_str(), (*iterator)->line(), (*iterator)->message().c_str());
-	}
+	BOOST_FOREACH(SyntaxError *error, this->m_syntaxErrors)
+		std::cout << boost::format(_("File %1%, line %2%: %3%")) % error->sourceFile()->identifier() % error->line() % error->message() << std::endl;
 }
 
 void Parser::sortAlphabetically()
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Sorting alphabetically.") << std::endl;
 
 	for (int i = 0; i < Parser::MaxLists; ++i)
 	{
-		if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)))
+		if (!parent()->optionParseObjectsOfList(Parser::List(i)))
 			continue;
 
-		this->getList(Parser::List(i)).sort(Object::AlphabeticalComparator());
+		// TODO FIXME
+		//this->getList(Parser::List(i)).sort(Object::AlphabeticalComparator());
 	}
 }
 
 void Parser::createHtmlFiles()
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Creating HTML files.") << std::endl;
 
-	std::ofstream fstream((Vjassdoc::optionDir() + dirSeparator + "index.html").c_str());
+	std::ofstream fstream((parent()->optionDir() + dirSeparator + "index.html").c_str());
 
 	if (!fstream)
 	{
@@ -441,7 +258,7 @@ void Parser::createHtmlFiles()
 		return;
 	}
 
-	std::string title = Vjassdoc::optionTitle();
+	std::string title = parent()->optionTitle();
 	createHtmlHeader(fstream, title);
 	fstream
 	<< "\t<body>\n"
@@ -455,13 +272,13 @@ void Parser::createHtmlFiles()
 
 	for (int i = 0; i < Parser::MaxLists; ++i)
 	{
-		if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
+		if (!parent()->optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
 			continue;
 
 		fstream << "\t\t\t<li><a href=\"#" << Parser::title[i] << "\">" << Parser::title[i] << " (" << this->getList(Parser::List(i)).size() << ")</a></li>" << std::endl;
 	}
 
-	if (Vjassdoc::optionSpecialpages())
+	if (parent()->optionSpecialpages())
 	{
 		fstream
 		<< "\t\t\t<li>" << "<a href=\"inheritancelist.html\">" << _("Inheritance List") << "</a></li>\n"
@@ -479,7 +296,7 @@ void Parser::createHtmlFiles()
 	// link lists for all object types are created
 	for (int i = 0; i < Parser::MaxLists; ++i)
 	{
-		if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
+		if (!parent()->optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
 			continue;
 
 		fstream
@@ -487,7 +304,7 @@ void Parser::createHtmlFiles()
 		this->addObjectList(fstream, List(i));
 	}
 
-	if (Vjassdoc::optionSpecialpages())
+	if (parent()->optionSpecialpages())
 	{
 		this->createInheritanceListPage();
 		//this->createRequirementListPage(); /// @todo Bugged
@@ -499,15 +316,15 @@ void Parser::createHtmlFiles()
 
 		for (int i = 0; i < Parser::MaxLists; ++i)
 		{
-			if (Parser::List(i) == Parser::SourceFiles || Parser::List(i) == Parser::DocComments || !Vjassdoc::optionParseObjectsOfList(Parser::List(i)))
+			if (Parser::List(i) == Parser::SourceFiles || Parser::List(i) == Parser::DocComments || !parent()->optionParseObjectsOfList(Parser::List(i)))
 				continue;
 
-			std::list<class Object*> list = this->getList(Parser::List(i));
+			ObjectList &list = this->getList(Parser::List(i));
 
-			for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
+			BOOST_FOREACH(ObjectList::reference ref, list)
 			{
-				if ((*iterator)->docComment() == 0)
-					fstream << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
+				if (ref.second->docComment() == 0)
+					fstream << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
 			}
 		}
 
@@ -529,24 +346,24 @@ void Parser::createHtmlFiles()
 	fstream.close();
 
 	//create pages
-	if (Vjassdoc::optionPages())
+	if (parent()->optionPages())
 	{
 		for (int i = 0; i < Parser::MaxLists; ++i)
 		{
-			if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)))
+			if (!parent()->optionParseObjectsOfList(Parser::List(i)))
 				continue;
 
-			std::list<class Object*> list = this->getList(Parser::List(i));
+			ObjectList &list = this->getList(Parser::List(i));
 
-			for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
+			BOOST_FOREACH(ObjectList::reference ref, list)
 			{
 				std::ostringstream sstream;
-				sstream << Vjassdoc::optionDir() << '/' << (*iterator)->id() << ".html";
+				sstream << parent()->optionDir() << '/' << ref.second->id() << ".html";
 				std::ofstream fout(sstream.str().c_str());
 
 				if (!fout)
 				{
-					fprintf(stderr, _("Error while creating file \"%s\".\n"), sstream.str().c_str());
+					std::cerr << boost::format(_("Error while creating file \"%1%\".")) % sstream.str() << std::endl;
 
 					return;
 				}
@@ -559,17 +376,17 @@ void Parser::createHtmlFiles()
 				<< "<html>\n"
 				<< "\t<head>\n"
 				<< "\t\t<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\"/>\n"
-				<< "\t\t<title>" << (*iterator)->identifier() << "</title>\n"
+				<< "\t\t<title>" << ref.second->identifier() << "</title>\n"
 				<< "\t\t<link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\"/>\n"
 				<< "\t</head>\n"
 				<< "\t<body>\n"
 				<< "\t\t<a href=\"index.html\">" << _("Return to start page") << "</a>\n"
-				<< "\t\t<h1>" << (*iterator)->identifier() << "</h1>\n"
+				<< "\t\t<h1>" << ref.second->identifier() << "</h1>\n"
 				<< "\t\t<ul>\n"
 				;
-				(*iterator)->pageNavigation(fout);
+				ref.second->pageNavigation(fout);
 				fout << "\t\t</ul>\n";
-				(*iterator)->page(fout);
+				ref.second->page(fout);
 				fout
 				<< "\t</body>\n"
 				<< "</html>\n";
@@ -581,49 +398,33 @@ void Parser::createHtmlFiles()
 
 void Parser::parse(const std::list<std::string> &filePaths)
 {
-	std::list<class SourceFile*> parsedList;
-
-	for (std::list<std::string>::const_iterator iterator = filePaths.begin(); iterator != filePaths.end(); ++iterator)
+	BOOST_FOREACH(const std::string &path, filePaths)
 	{
-		std::string identifier = *iterator;
+		std::string identifier = path;
 		cutFilePath(identifier);
-		class SourceFile *sourceFile = new SourceFile(identifier, *iterator);
+		class SourceFile *sourceFile = new SourceFile(this, identifier, path);
 		this->add(sourceFile);
-		parsedList.push_back(sourceFile);
-		this->m_currentSourceFile = sourceFile;
-		this->parseFile(*iterator);
 	}
 
-	// there may be new source files if vJass's //! import macro was used
-	for (std::list<class SourceFile*>::const_iterator iterator = this->m_sourceFiles.begin(); iterator != this->m_sourceFiles.end(); ++iterator)
+	// new imports are added automatically in parseFile()
+	BOOST_FOREACH(ObjectList::reference ref, this->m_sourceFiles)
 	{
-		bool isInList = false;
-
-		for (std::list<class SourceFile*>::iterator iterator0 = parsedList.begin(); iterator0 != parsedList.end() && !isInList; ++iterator0)
-		{
-			if ((*iterator0) == (*iterator))
-				isInList = true;
-		}
-
-		if (!isInList)
-		{
-			this->m_currentSourceFile = *iterator;
-			this->parseFile((*iterator)->path());
-		}
+		this->m_currentSourceFile = boost::polymorphic_cast<SourceFile*>(ref.second);
+		this->parseFile(this->m_currentSourceFile->path());
 	}
 
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		std::cout << _("Initializing parsed objects.") << std::endl;
 
 	//objects should be initialized before using them
 	for (int i = 0; i < Parser::MaxLists; ++i)
 	{
-		if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)))
+		if (!parent()->optionParseObjectsOfList(Parser::List(i)))
 			continue;
 
-		std::list<class Object*> list = this->getList(Parser::List(i));
+		ObjectList &list = this->getList(Parser::List(i));
 
-		for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
+		BOOST_FOREACH(ObjectList::reference ref, list)
 		{
 #ifdef SQLITE
 /*
@@ -647,15 +448,141 @@ void Parser::parse(const std::list<std::string> &filePaths)
 */
 #endif
 
-			(*iterator)->init();
+			ref.second->init();
 		}
 	}
+}
+
+namespace
+{
+
+void addToList(Parser::ObjectList &list, Object *object)
+{
+	std::string identifier = object->identifier();
+	list.insert(identifier, object);
+}
+
+}
+
+void Parser::add(class Comment *comment)
+{
+	addToList(this->m_comments, comment);
+}
+
+void Parser::add(class Key *key)
+{
+	addToList(this->m_keys, key);
+}
+
+void Parser::add(class Keyword *keyword)
+{
+	addToList(this->m_keywords, keyword);
+}
+
+void Parser::add(class TextMacro *textMacro)
+{
+	addToList(this->m_textMacros, textMacro);
+}
+
+void Parser::add(class TextMacroInstance *textMacroInstance)
+{
+	addToList(this->m_textMacroInstances, textMacroInstance);
+}
+
+void Parser::add(class Type *type)
+{
+	addToList(this->m_types, type);
+}
+
+void Parser::add(class Local *local)
+{
+	addToList(this->m_locals, local);
+}
+
+void Parser::add(class Global *global)
+{
+	addToList(this->m_globals, global);
+}
+
+void Parser::add(class Member *member)
+{
+	addToList(this->m_members, member);
+}
+
+void Parser::add(class Parameter *parameter)
+{
+	addToList(this->m_parameters, parameter);
+}
+
+void Parser::add(class FunctionInterface *functionInterface)
+{
+	addToList(this->m_functionInterfaces, functionInterface);
+}
+
+void Parser::add(class Function *function)
+{
+	addToList(this->m_functions, function);
+}
+
+void Parser::add(class Method *method)
+{
+	addToList(this->m_methods, method);
+}
+
+void Parser::add(class Call *call)
+{
+	addToList(this->m_calls, call);
+}
+
+void Parser::add(class Implementation *implementation)
+{
+	addToList(this->m_implementations, implementation);
+}
+
+void Parser::add(class Hook *hook)
+{
+	addToList(this->m_hooks, hook);
+}
+
+void Parser::add(class Interface *interface)
+{
+	addToList(this->m_interfaces, interface);
+}
+
+void Parser::add(class Struct *usedStruct)
+{
+	addToList(this->m_structs, usedStruct);
+}
+
+void Parser::add(class Module *module)
+{
+	addToList(this->m_modules, module);
+}
+
+void Parser::add(class Scope *scope)
+{
+	addToList(this->m_scopes, scope);
+}
+
+void Parser::add(class Library *library)
+{
+	addToList(this->m_libraries, library);
+}
+
+void Parser::add(class SourceFile *sourceFile)
+{
+	addToList(this->m_sourceFiles, sourceFile);
+}
+
+void Parser::add(class DocComment *docComment)
+{
+	addToList(this->m_docComments, docComment);
 }
 
 #ifdef SQLITE
 void Parser::createDatabase(const std::string &filePath)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		printf(_("Creating database.\nUsing SQLite version %s.\n"), SQLITE_VERSION);
 
 	if (fileExists(filePath))
@@ -708,7 +635,7 @@ void Parser::createDatabase(const std::string &filePath)
 
 		for (int i = 0; i < Parser::MaxLists; ++i)
 		{
-			if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
+			if (!parent()->optionParseObjectsOfList(Parser::List(i)) || this->getList(Parser::List(i)).empty())
 				continue;
 
 			state = sqlite3_exec(database, this->getTableCreationStatement(Parser::List(i)).c_str(), 0, 0, &message);
@@ -723,7 +650,7 @@ void Parser::createDatabase(const std::string &filePath)
 				sqlite3_free(message);
 			}
 
-			std::list<class Object*> list = this->getList(Parser::List(i));
+			std::list<class Object*> &list = this->getList(Parser::List(i));
 
 			for (std::list<class Object*>::iterator iterator = list.begin(); iterator != list.end(); ++iterator)
 			{
@@ -781,7 +708,7 @@ void Parser::createDatabase(const std::string &filePath)
 
 int Parser::addDatabase(const std::string &filePath)
 {
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		printf(_("Loading database %s.\n"), filePath.c_str());
 
 	int result = -1;
@@ -796,7 +723,7 @@ int Parser::addDatabase(const std::string &filePath)
 
 		for (int i = 0; i < Parser::MaxLists; ++i)
 		{
-			if (!Vjassdoc::optionParseObjectsOfList(Parser::List(i)))
+			if (!parent()->optionParseObjectsOfList(Parser::List(i)))
 				continue;
 
 			std::cout << "List " << i << std::endl;
@@ -860,7 +787,7 @@ int Parser::addDatabase(const std::string &filePath)
 			}
 		}
 
-		if (Vjassdoc::optionVerbose())
+		if (parent()->optionVerbose())
 		{
 			printf(_("Got %d database objects.\n"), databaseStruct->objectList.size());
 			std::cout << _("Intializing database objects.") << std::endl;
@@ -875,7 +802,7 @@ int Parser::addDatabase(const std::string &filePath)
 			++objectIterator;
 		}
 
-		if (Vjassdoc::optionVerbose())
+		if (parent()->optionVerbose())
 			std::cout << _("Adding database objects.") << std::endl;
 
 		/// @todo Add database objects into usual lists and increase ids.
@@ -912,7 +839,7 @@ void Parser::removeDatabase(const int &index)
 	}
 	*/
 
-	if (Vjassdoc::optionVerbose())
+	if (parent()->optionVerbose())
 		printf(_("Removing database %d.\n"), index);
 
 	class Database *database = this->m_databases[index];
@@ -951,31 +878,20 @@ class Object* Parser::searchObjectInLastDatabase(const Object::IdType &id)
 }
 #endif
 
-class Object* Parser::searchObjectInList(const std::string &identifier, const enum List &list, const enum SearchMode &searchMode, const class Object *object)
+class Object* Parser::searchObjectInList(const std::string &identifier, List list, SearchMode searchMode, const class Object *object)
 {
-	if (!Vjassdoc::optionParseObjectsOfList(list))
+	if (!parent()->optionParseObjectsOfList(list))
 		return 0;
 
-	std::list<class Object*> objectList = this->getList(list);
+	ObjectList &objectList = this->getList(list);
+
 
 	return Parser::searchObjectInCustomList(objectList, identifier, searchMode, object);
 }
 
-std::list<class Object*> Parser::getSpecificList(const enum List &list, const struct Comparator &comparator, const class Object *object)
+Object* Parser::searchObjectInList(const std::string &identifier, Parser::List list, const Object *object)
 {
-	if (!Vjassdoc::optionParseObjectsOfList(list))
-		return std::list<class Object*>();
-
-	std::list<class Object*> objectList = this->getList(list);
-	std::list<class Object*> result;
-
-	for (std::list<class Object*>::const_iterator iterator = objectList.begin(); iterator != objectList.end(); ++iterator)
-	{
-		if (comparator(*iterator, object))
-			result.push_back(*iterator);
-	}
-
-	return result;
+	return searchObjectInList(identifier, list, Unspecified, object);
 }
 
 std::list<class Object*> Parser::autoCompletion(const std::string &line, std::size_t &index)
@@ -1005,7 +921,6 @@ std::list<class Object*> Parser::autoCompletion(const std::string &line, std::si
 
 	if (token == "extends")
 	{
-		std::cout << "Found extends token" << std::endl;
 		lists.push_back(Parser::Structs);
 		lists.push_back(Parser::Interfaces);
 		keyword = Extension;
@@ -1046,18 +961,15 @@ std::list<class Object*> Parser::autoCompletion(const std::string &line, std::si
 	}
 
 	token = getToken(line, index);
-	std::cout << "Search identifier token " << token << std::endl;
 	std::list<class Object*> results;
 
-	for (std::list<enum Parser::List>::iterator iterator0 = lists.begin(); iterator0 != lists.end(); ++iterator0)
+	BOOST_FOREACH(Parser::List list, lists)
 	{
-		std::list<class Object*> list = this->getList(*iterator0);
+		ObjectList &objectList = this->getList(list);
+		boost::iterator_range<ObjectList::iterator> range = objectList.equal_range(token);
 
-		for (std::list<class Object*>::iterator iterator1 = list.begin(); iterator1 != list.end(); ++iterator1)
-		{
-			if (token == (*iterator1)->identifier())
-				results.push_back(*iterator1);
-		}
+		BOOST_FOREACH(ObjectList::reference ref, range)
+			results.push_back(ref.second);
 	}
 
 	return results;
@@ -1067,106 +979,108 @@ void Parser::parseFile(const std::string &path)
 {
 	std::ifstream ifstream(path.c_str());
 
-	if (!ifstream.good())
+	if (!ifstream)
 	{
 		ifstream.close();
-		fprintf(stderr, _("Was unable to open file %s.\n"), path.c_str());
+		std::cerr << boost::format(_("Was unable to open file \"%1%\".")) % path << std::endl;
 
 		return;
 	}
 
-
-	class File file;
-	std::size_t lines = file.parse(this, ifstream);
-	Vjassdoc::addLines(lines);
-	Vjassdoc::addFile();
-	printf(_("Parsed file %s successfully (number %d, %d lines).\n"), path.c_str(), Vjassdoc::files(), lines);
+	boost::scoped_ptr<File> file(new File());
+	std::size_t lines = file->parse(this, ifstream);
+	parent()->addLines(lines);
+	parent()->addFile();
+	std::cout << boost::format(_("Parsed file \"%1%\" successfully (number %2%, %3% lines).")) % path % parent()->files() % lines << std::endl;
 
 	ifstream.close();
 }
 
-std::list<class Object*>& Parser::getList(enum Parser::List list)
+Parser::ObjectList& Parser::getList(enum Parser::List list)
 {
+	assert(list >= Parser::Comments && list < Parser::MaxLists);
+
 	switch (list)
 	{
 		case Parser::Comments:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_comments);
+			return this->m_comments;
 
 		case Parser::Keywords:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_keywords);
+			return this->m_keywords;
 
 		case Parser::Keys:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_keys);
+			return this->m_keys;
 
 		case Parser::TextMacros:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_textMacros);
+			return this->m_textMacros;
 
 		case Parser::TextMacroInstances:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_textMacroInstances);
+			return this->m_textMacroInstances;
 
 		case Parser::Types:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_types);
+			return this->m_types;
 
 		case Parser::Locals:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_locals);
+			return this->m_locals;
 
 		case Parser::Globals:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_globals);
+			return this->m_globals;
 
 		case Parser::Members:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_members);
+			return this->m_members;
 
 		case Parser::Parameters:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_parameters);
+			return this->m_parameters;
 
 		case Parser::FunctionInterfaces:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_functionInterfaces);
+			return this->m_functionInterfaces;
 
 		case Parser::Functions:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_functions);
+			return this->m_functions;
 
 		case Parser::Methods:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_methods);
+			return this->m_methods;
 
 		case Parser::Calls:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_calls);
+			return this->m_calls;
 
 		case Parser::Implementations:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_implementations);
+			return this->m_implementations;
 
 		case Parser::Hooks:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_hooks);
+			return this->m_hooks;
 
 		case Parser::Interfaces:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_interfaces);
+			return this->m_interfaces;
 
 		case Parser::Structs:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_structs);
+			return this->m_structs;
 
 		case Parser::Modules:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_modules);
+			return this->m_modules;
 
 		case Parser::Scopes:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_scopes);
+			return this->m_scopes;
 
 		case Parser::Libraries:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_libraries);
+			return this->m_libraries;
 
 		case Parser::SourceFiles:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_sourceFiles);
+			return this->m_sourceFiles;
 
 		case Parser::DocComments:
-			return reinterpret_cast<std::list<class Object*>& >(this->m_docComments);
+			return this->m_docComments;
 	}
-
-	fprintf(stderr, _("Unknown list %d.\n"), list);
-
-	return reinterpret_cast<std::list<class Object*>& >(this->m_comments);
 }
 
-std::ostream& Parser::addObjectList(std::ostream &output, const enum Parser::List &list)
+const Parser::ObjectList& Parser::getList(Parser::List list) const
 {
-	std::list<class Object*> objectsList = this->getList(list);
+	return const_cast<Parser*>(this)->getList(list);
+}
+
+std::ostream& Parser::addObjectList(std::ostream &output, Parser::List list)
+{
+	ObjectList &objectsList = this->getList(list);
 
 	if (objectsList.empty())
 	{
@@ -1177,8 +1091,8 @@ std::ostream& Parser::addObjectList(std::ostream &output, const enum Parser::Lis
 
 	output << "\t\t<ul>\n";
 
-	for (std::list<class Object*>::const_iterator iterator = objectsList.begin(); iterator != objectsList.end(); ++iterator)
-		output << "\t\t\t<li>" << Object::objectPageLink(*iterator) << "</li>\n";
+	BOOST_FOREACH(ObjectList::reference ref, objectsList)
+		output << "\t\t\t<li>" << Object::objectPageLink(ref.second) << "</li>\n";
 
 	output << "\t\t</ul>\n";
 
@@ -1582,43 +1496,36 @@ class Object* Parser::createObjectByVector(std::vector<const unsigned char*> &co
 
 void Parser::getStructInheritanceList(const class Interface *extension, const std::string &prefix, std::ostream &ostream)
 {
-	std::list<class Object*> structList = this->getSpecificList(Parser::Structs, Struct::HasExtension(), extension);
+	SpecificObjectList structList = this->getSpecificList<Struct::HasExtension>(Parser::Structs, extension);
 
 	if (structList.empty())
 		return;
 
 	ostream << prefix << "<ul>\n";
 
-	for (std::list<class Object*>::iterator iterator = structList.begin(); iterator != structList.end(); ++iterator)
+	BOOST_FOREACH(SpecificObjectList::reference ref, structList)
 	{
-		ostream << prefix << "\t<li>" << (*iterator)->pageLink() << '\n';
-		this->getStructInheritanceList(static_cast<class Interface*>(*iterator), prefix + "\t\t", ostream);
+		ostream << prefix << "\t<li>" << ref.second->pageLink() << '\n';
+		this->getStructInheritanceList(boost::polymorphic_cast<Interface*>(ref.second), prefix + "\t\t", ostream);
 		ostream << prefix << "\t</li>\n";
 	}
 
 	ostream << prefix << "</ul>\n";
 }
 
-/// @todo FIXME
 void Parser::getLibraryRequirementList(const class Library *requirement, const std::string &prefix, std::ostream &ostream)
 {
-	std::cout << "Running with library " << requirement->identifier() << std::endl;
-
-	std::list<class Object*> specifiedList = this->getSpecificList(Parser::Libraries, Library::HasRequirement(), requirement); /// @todo Comparator is not called.
+	SpecificObjectList specifiedList = this->getSpecificList<Library::HasRequirement>(Parser::Libraries, requirement);
 
 	if (specifiedList.empty())
-	{
-		std::cout << "Requirement list is empty." << std::endl;
-
 		return;
-	}
 
 	ostream << prefix << "<ul>\n";
 
-	for (std::list<class Object*>::iterator iterator = specifiedList.begin(); iterator != specifiedList.end(); ++iterator)
+	BOOST_FOREACH(SpecificObjectList::reference ref, specifiedList)
 	{
-		ostream << prefix << "\t<li>" << (*iterator)->pageLink() << '\n';
-		this->getLibraryRequirementList(static_cast<class Library*>(*iterator), prefix + "\t\t", ostream);
+		ostream << prefix << "\t<li>" << ref.second->pageLink() << '\n';
+		this->getLibraryRequirementList(boost::polymorphic_cast<Library*>(ref.second), prefix + "\t\t", ostream);
 		ostream << prefix << "\t</li>\n";
 	}
 
@@ -1626,3 +1533,4 @@ void Parser::getLibraryRequirementList(const class Library *requirement, const s
 }
 
 }
+

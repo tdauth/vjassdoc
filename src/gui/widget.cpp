@@ -50,7 +50,6 @@ void Widget::run()
 		return;
 	}
 
-
 	bool parseObjectsOfList[vjassdoc::Parser::MaxLists];
 
 	for (int i = 0; i < vjassdoc::Parser::MaxLists; ++i)
@@ -58,20 +57,20 @@ void Widget::run()
 
 	std::list<std::string> importDirs;
 
-	foreach (QString iterator, this->importDirectoriesEditListBox->items())
-		importDirs.push_back(iterator.toAscii().data()); //iterator.toStdString()
+	foreach (const QString &iterator, this->importDirectoriesEditListBox->items())
+		importDirs.push_back(iterator.toUtf8().constData()); //iterator.toStdString()
 
 	std::list<std::string> filePaths;
 
-	foreach (QString iterator, this->filesEditListBox->items())
-		filePaths.push_back(iterator.toAscii().data()); //iterator.toStdString()
+	foreach (const QString &iterator, this->filesEditListBox->items())
+		filePaths.push_back(iterator.toUtf8().constData()); //iterator.toStdString()
 
 	std::list<std::string> databases;
 
-	foreach (QString iterator, this->databasesEditListBox->items())
-		databases.push_back(iterator.toAscii().data()); //iterator.toStdString()
+	foreach (const QString &iterator, this->databasesEditListBox->items())
+		databases.push_back(iterator.toUtf8().constData()); //iterator.toStdString()
 
-	vjassdoc::Vjassdoc::configure(
+	m_app.reset(new vjassdoc::Vjassdoc(
 	this->optionJassCheckBox->isChecked(),
 	this->optionDebugCheckBox->isChecked(),
 	this->optionPrivateCheckBox->isChecked(),
@@ -91,12 +90,12 @@ void Widget::run()
 	this->outputDirectoryUrlRequester->url().path().toUtf8().data(),
 	importDirs,
 	filePaths,
-	databases);
+	databases));
 #ifdef SQLITE
 	Vjassdoc::initClasses();
 #endif
-	Vjassdoc::run();
-	Vjassdoc::clear();
+
+	m_app->run();
 }
 
 void Widget::selectFile()
@@ -123,11 +122,20 @@ void Widget::selectDatabase()
 		databasesEditListBox->lineEdit()->setText(fileName);
 }
 
-Widget::Widget(class MainWindow *parent) : QWidget(parent)
+void Widget::showAbout()
+{
+	if (m_aboutDialog == 0)
+		m_aboutDialog = new KAboutApplicationDialog(&m_about, this);
+
+	m_aboutDialog->show();
+}
+
+Widget::Widget(const KAboutData &about, class MainWindow *parent) : QWidget(parent), m_about(about), m_aboutDialog(0)
 {
 	setupUi(this);
 	connect(this->dialogButtonBox, SIGNAL(accepted()), this, SLOT(run()));
 	connect(this->dialogButtonBox, SIGNAL(rejected()), parent, SLOT(close()));
+	connect(this->dialogButtonBox->button(KDialogButtonBox::Help), SIGNAL(clicked()), this, SLOT(showAbout()));
 
 	filesEditListBox->lineEdit()->setCompletionObject(new KUrlCompletion(KUrlCompletion::FileCompletion));
 	importDirectoriesEditListBox->lineEdit()->setCompletionObject(new KUrlCompletion(KUrlCompletion::FileCompletion));
@@ -137,17 +145,24 @@ Widget::Widget(class MainWindow *parent) : QWidget(parent)
 	connect(selectImportDirectoryPushButton, SIGNAL(pressed()), this, SLOT(selectImportDirectory()));
 	connect(selectDatabasePushButton, SIGNAL(pressed()), this, SLOT(selectDatabase()));
 
+	readSettings();
+}
 
+Widget::~Widget()
+{
+	writeSettings();
+}
 
+void Widget::readSettings()
+{
 	//settings
 	QSettings settings;
 	settings.beginGroup("widget");
 	titleLineEdit->setText(settings.value("title", tr("My API Documentation")).toString());
 	QStringList files;
 	int size = settings.beginReadArray("files");
-	int i = 0;
 
-	for ( ; i < size; ++i)
+	for (int i = 0; i < size; ++i)
 	{
 		settings.setArrayIndex(i);
 		files << settings.value("file").toString();
@@ -156,46 +171,46 @@ Widget::Widget(class MainWindow *parent) : QWidget(parent)
 	settings.endArray();
 	this->filesEditListBox->setItems(files);
 	this->optionJassCheckBox->setChecked(settings.value("jass", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("debug", true).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("private", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("textmacros", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("functions", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("html", true).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("pages", true).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("specialpages", true).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("syntax", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("verbose", false).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("time", true).toBool());
-	this->optionJassCheckBox->setChecked(settings.value("alphabetical", true).toBool());
-	this->outputDirectoryUrlRequester->setUrl(settings.value("dir").toUrl());
-	this->compilationDirectoryUrlRequester->setUrl(settings.value("compile").toUrl());
-	this->databaseDirectoryUrlRequester->setUrl(settings.value("database").toUrl());
+	this->optionDebugCheckBox->setChecked(settings.value("debug", true).toBool());
+	this->optionPrivateCheckBox->setChecked(settings.value("private", false).toBool());
+	this->optionTextmacrosCheckBox->setChecked(settings.value("textmacros", false).toBool());
+	this->optionFunctionsCheckBox->setChecked(settings.value("functions", false).toBool());
+	this->optionHtmlCheckBox->setChecked(settings.value("html", true).toBool());
+	this->optionPagesCheckBox->setChecked(settings.value("pages", true).toBool());
+	this->optionSpecialpagesCheckBox->setChecked(settings.value("specialpages", true).toBool());
+	this->optionSyntaxCheckBox->setChecked(settings.value("syntax", false).toBool());
+	this->optionVerboseCheckBox->setChecked(settings.value("verbose", false).toBool());
+	this->optionTimeCheckBox->setChecked(settings.value("time", true).toBool());
+	this->optionAlphabeticalCheckBox->setChecked(settings.value("alphabetical", true).toBool());
+	this->outputDirectoryUrlRequester->setUrl(settings.value("dir").toString());
+	this->compilationDirectoryUrlRequester->setUrl(settings.value("compile").toString());
+	this->databaseDirectoryUrlRequester->setUrl(settings.value("database").toString());
 	QStringList import;
 	size = settings.beginReadArray("import");
-	i = 0;
 
-	for ( ; i < size; ++i)
+	for (int i = 0; i < size; ++i)
 	{
 		settings.setArrayIndex(i);
 		import << settings.value("file").toString();
 	}
 
 	settings.endArray();
+	this->importDirectoriesEditListBox->setItems(import);
 	QStringList databases;
 	size = settings.beginReadArray("databases");
-	i = 0;
 
-	for ( ; i < size; ++i)
+	for (int i = 0; i < size; ++i)
 	{
 		settings.setArrayIndex(i);
 		databases << settings.value("file").toString();
 	}
 
 	settings.endArray();
+	this->databasesEditListBox->setItems(import);
 	settings.endGroup();
 }
 
-Widget::~Widget()
+void Widget::writeSettings()
 {
 	//settings
 	QSettings settings;
@@ -224,9 +239,9 @@ Widget::~Widget()
 	settings.setValue("verbose", this->optionVerboseCheckBox->isChecked());
 	settings.setValue("time", this->optionTimeCheckBox->isChecked());
 	settings.setValue("alphabetical", this->optionAlphabeticalCheckBox->isChecked());
-	settings.setValue("dir", this->outputDirectoryUrlRequester->url());
-	settings.setValue("compile", this->compilationDirectoryUrlRequester->url());
-	settings.setValue("database", this->databaseDirectoryUrlRequester->url());
+	settings.setValue("dir", this->outputDirectoryUrlRequester->url().toLocalFile());
+	settings.setValue("compile", this->compilationDirectoryUrlRequester->url().toLocalFile());
+	settings.setValue("database", this->databaseDirectoryUrlRequester->url().toLocalFile());
 	settings.beginWriteArray("import", this->importDirectoriesEditListBox->items().size());
 	i = 0;
 
@@ -251,6 +266,7 @@ Widget::~Widget()
 	settings.endArray();
 	settings.endGroup();
 }
+
 
 }
 

@@ -21,6 +21,8 @@
 #ifndef VJASSDOC_TEXTMACROINSTANCE_HPP
 #define VJASSDOC_TEXTMACROINSTANCE_HPP
 
+#include <boost/cast.hpp>
+
 #include "textmacro.hpp"
 #include "parser.hpp"
 
@@ -30,27 +32,23 @@ namespace vjassdoc
 class TextMacroInstance : public TextMacro
 {
 	public:
-		struct UsesTextMacro : public Parser::Comparator
+		struct UsesTextMacro : public std::binary_function<const TextMacroInstance*, const TextMacro*, bool>
 		{
-			virtual bool operator()(const class TextMacroInstance *thisTextMacroInstance, const class TextMacro *textMacro) const;
+			virtual bool operator()(const TextMacroInstance *textMacroInstance, const TextMacro *TextMacro) const;
 		};
 
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		TextMacroInstance(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOptional, const std::string &arguments);
+		TextMacroInstance(class Parser *parser);
 
-		static void initClass();
-#endif
-		TextMacroInstance(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOptional, const std::string &arguments);
-#ifdef SQLITE
-		TextMacroInstance(std::vector<const unsigned char*> &columnVector);
-#endif
 		virtual void init();
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
 #ifdef SQLITE
-		virtual std::string sqlStatement() const;
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		virtual class TextMacro* textMacro() const;
 		bool isOptional() const;
@@ -60,11 +58,10 @@ class TextMacroInstance : public TextMacro
 		bool m_isOptional;
 };
 
-inline bool TextMacroInstance::UsesTextMacro::operator()(const class TextMacroInstance *thisTextMacroInstance, const class TextMacro *textMacro) const
+inline bool TextMacroInstance::UsesTextMacro::operator()(const TextMacroInstance *textMacroInstance, const TextMacro *textMacro) const
 {
-	return thisTextMacroInstance->textMacro() == textMacro;
+	return textMacroInstance->textMacro() == textMacro;
 }
-
 
 inline class TextMacro* TextMacroInstance::textMacro() const
 {

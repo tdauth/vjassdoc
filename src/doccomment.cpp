@@ -200,7 +200,7 @@ void DocComment::initClass()
 }
 #endif
 
-DocComment::DocComment(const std::string &identifier, class SourceFile *sourceFile, unsigned int line) : Object(identifier, sourceFile, line, 0), m_object(0)
+DocComment::DocComment(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line) : Object(parser, identifier, sourceFile, line, 0), m_object(0)
 {
 }
 
@@ -271,7 +271,7 @@ void DocComment::init()
 						class Object *object = 0;
 
 						for (unsigned int i = 0; i < Parser::MaxLists && object == 0; ++i)
-							object = Vjassdoc::parser()->searchObjectInList(identifier, Parser::List(i));
+							object = parser()->searchObjectInList(identifier, Parser::List(i));
 
 						if (object != 0)
 							this->m_seeObjects.push_back(object);
@@ -305,7 +305,7 @@ void DocComment::init()
 						{
 							std::string::size_type position = oldIndex;
 							std::string identifier = getToken(result, oldIndex);
-							class Object *object = this->searchObjectInList(identifier, Parser::List(i), Parser::Unspecified);
+							class Object *object = this->parser()->searchObjectInList(identifier, Parser::List(i), this);
 							std::string link = Object::objectPageLink(object, identifier);
 							result.replace(position, oldIndex - position, link);
 						}

@@ -26,33 +26,27 @@
 namespace vjassdoc
 {
 
-class Function;
-
 class Local : public Object
 {
 	public:
-#ifdef SQLITE
-		static const char *sqlTableName;
-		static unsigned int sqlColumns;
-		static std::string sqlColumnStatement;
+		Local(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Function *function, const std::string &typeExpression, const std::string &valueExpression);
+		Local(class Parser *parser);
 
-		static void initClass();
-#endif
-		Local(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Function *function, const std::string &typeExpression, const std::string &valueExpression);
-#ifdef SQLITE
-		Local(std::vector<const unsigned char*> &columnVector);
-#endif
 		virtual void init();
 		virtual void pageNavigation(std::ofstream &file) const;
 		virtual void page(std::ofstream &file) const;
 #ifdef SQLITE
-		virtual std::string sqlStatement() const;
+		virtual const char* sqlTableName() const;
+		virtual std::size_t sqlSize() const;
+		virtual SqlColumn sqlNames() const;
+		virtual SqlColumn sqlTypes() const;
+		virtual SqlColumn sqlValues() const;
 #endif
 		class Function* function() const; //Function, Method
 		class Object* type() const; //Type, Interface, Struct
-		std::string typeExpression() const; //Unknown type
+		const std::string& typeExpression() const; //Unknown type
 		class Object* value() const; //Global, Member (static), Function, Method (static)
-		std::string valueExpression() const; //Literal
+		const std::string& valueExpression() const; //Literal
 
 	protected:
 		class Function *m_function;
@@ -72,7 +66,7 @@ inline class Object* Local::type() const
 	return this->m_type;
 }
 
-inline std::string Local::typeExpression() const
+inline const std::string& Local::typeExpression() const
 {
 	return this->m_typeExpression;
 }
@@ -82,7 +76,7 @@ inline  class Object* Local::value() const
 	return this->m_value;
 }
 
-inline std::string Local::valueExpression() const
+inline const std::string& Local::valueExpression() const
 {
 	return this->m_valueExpression;
 }

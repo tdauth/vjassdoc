@@ -42,7 +42,7 @@ void Hook::initClass()
 }
 #endif
 
-Hook::Hook(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionExpression, const std::string &hookFunctionExpression) : Object(identifier, sourceFile, line, docComment), m_function(0), m_functionExpression(functionExpression), m_hookFunction(0), m_hookFunctionExpression(hookFunctionExpression)
+Hook::Hook(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &functionExpression, const std::string &hookFunctionExpression) : Object(parser, identifier, sourceFile, line, docComment), m_function(0), m_functionExpression(functionExpression), m_hookFunction(0), m_hookFunctionExpression(hookFunctionExpression)
 {
 }
 
@@ -59,15 +59,15 @@ Hook::~Hook()
 
 void Hook::init()
 {
-	this->m_function = static_cast<class Function*>(this->searchObjectInList(this->functionExpression(), Parser::Functions));
-	
+	this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Functions, this));
+
 	if (this->m_function == 0)
-		this->m_function = static_cast<class Function*>(this->searchObjectInList(this->functionExpression(), Parser::Methods));
-	
-	this->m_hookFunction = static_cast<class Function*>(this->searchObjectInList(this->hookFunctionExpression(), Parser::Functions));
-	
+		this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Methods, this));
+
+	this->m_hookFunction = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Functions, this));
+
 	if (this->m_hookFunction == 0)
-		this->m_hookFunction = static_cast<class Function*>(this->searchObjectInList(this->hookFunctionExpression(), Parser::Methods));
+		this->m_hookFunction = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Methods, this));
 }
 
 void Hook::pageNavigation(std::ofstream &file) const

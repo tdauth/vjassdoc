@@ -37,9 +37,7 @@ class MainWindow : public KMainWindow
 	//Q_OBJECT
 
 	public:
-		static const KAboutData *aboutData;
-
-		MainWindow(QWidget *parent = 0);
+		MainWindow(const KAboutData &about, QWidget *parent = 0);
 		virtual ~MainWindow();
 
 	private:

@@ -40,7 +40,7 @@ void SourceFile::initClass()
 }
 #endif
 
-SourceFile::SourceFile(const std::string &identifier, const std::string &path) : Object(identifier, 0, 0, 0), m_path(path)
+SourceFile::SourceFile(class Parser *parser, const std::string &identifier, const std::string &path) : Object(parser, identifier, 0, 0, 0), m_path(path)
 {
 }
 
@@ -68,10 +68,10 @@ void SourceFile::page(std::ofstream &file) const
 	<< "\t\t<pre>\n"
 	<< "\t\t<code>\n"
 	;
-	
+
 	std::ifstream sourceFile(this->path().c_str());
 	int i = 1;
-	
+
 	while (sourceFile.good())
 	{
 		std::string line;

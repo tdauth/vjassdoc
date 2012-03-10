@@ -22,6 +22,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <boost/scoped_ptr.hpp>
+
 #include "vjassdoc.hpp"
 #include "objects.hpp"
 
@@ -38,14 +40,14 @@ int main()
 	std::cout << "Enter your line index number, please." << std::endl;
 	std::cin >> index;
 	// Usually you should call Vjassdoc::configure before using it.
-	Vjassdoc::parser()->add(new Struct("Hans", 0, 0, 0, 0, 0, false, std::string(), std::string()));
-	std::list<class Object*> results = Vjassdoc::parser()->autoCompletion(line, index);
+	boost::scoped_ptr<Vjassdoc> program(new Vjassdoc());
+
+	program->parser()->add(new Struct(program->parser(), "Hans", 0, 0, 0, 0, 0, false, std::string(), std::string()));
+	std::list<class Object*> results = program->parser()->autoCompletion(line, index);
 	std::cout << "Results:" << std::endl;
 
 	for (std::list<class Object*>::iterator iterator = results.begin(); iterator != results.end(); ++iterator)
 		std::cout << (*iterator)->identifier() << std::endl;
-
-	Vjassdoc::clear(); // Deletes the parser.
 
 	return EXIT_SUCCESS;
 }

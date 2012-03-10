@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008, 2009 by Tamino Dauth                              *
+ *   Copyright (C) 2008 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,9 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <iostream> //debug
-#include <sstream>
-
 #include "objects.hpp"
 #include "vjassdoc.hpp"
 #include "internationalisation.hpp"
@@ -28,49 +25,29 @@
 namespace vjassdoc
 {
 
-#ifdef SQLITE
-const char *Local::sqlTableName = "Locals";
-unsigned int Local::sqlColumns;
-std::string Local::sqlColumnStatement;
-
-void Local::initClass()
-{
-	Local::sqlColumns = Object::sqlColumns + 5;
-	Local::sqlColumnStatement = Object::sqlColumnStatement +
-	",Function INT,"
-	"Type INT,"
-	"TypeExpression VARCHAR(50),"
-	"Value INT,"
-	"ValueExpression VARCHAR(50)"
-	;
-}
-#endif
-
-Local::Local(const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Function *function, const std::string &typeExpression, const std::string &valueExpression) : Object(identifier, sourceFile, line, docComment), m_function(function), m_type(0), m_typeExpression(typeExpression), m_value(0), m_valueExpression(valueExpression)
+Local::Local(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Function *function, const std::string &typeExpression, const std::string &valueExpression) : Object(parser, identifier, sourceFile, line, docComment), m_function(function), m_type(0), m_typeExpression(typeExpression), m_value(0), m_valueExpression(valueExpression)
 {
 }
 
-#ifdef SQLITE
-Local::Local(std::vector<const unsigned char*> &columnVector) : Object(columnVector), m_function(0), m_type(0), m_value(0)
+Local::Local(Parser *parser) : Object(parser), m_function(0), m_type(0), m_value(0)
 {
 }
-#endif
 
 /// @todo Value expressions can be calculations etc..
 void Local::init()
 {
 	//Must not be empty.
-	this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Types);
-	
+	this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Types, this);
+
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Interfaces);
-	
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Interfaces, this);
+
 	if (this->m_type == 0)
-		this->m_type = this->searchObjectInList(this->typeExpression(), Parser::Structs);
-	
+		this->m_type = this->parser()->searchObjectInList(this->typeExpression(), Parser::Structs, this);
+
 	if (this->m_type != 0)
 		this->m_typeExpression.clear();
-	
+
 	this->m_value = this->findValue(this->type(), this->m_valueExpression);
 }
 
@@ -100,36 +77,65 @@ void Local::page(std::ofstream &file) const
 	<< "\t\t" << Object::objectPageLink(this->type(), this->typeExpression()) << '\n'
 	<< "\t\t<h2><a name=\"Value\">" << _("Value") << "</a></h2>\n"
 	;
-	
+
 	if (this->valueExpression().empty() || this->valueExpression() == "-")
 		file << "\t\t" << Object::objectPageLink(this->value(), this->valueExpression()) << '\n';
 	else
 	{
 		file << "\t\t";
-		
+
 		if (this->value() != 0)
 			file << Object::objectPageLink(this->value());
-		
+
 		file << "\t\t" << this->valueExpression() << '\n';
 	}
 }
 
 #ifdef SQLITE
-std::string Local::sqlStatement() const
+const char* Local::sqlTableName() const
 {
-	std::ostringstream sstream;
-	sstream
-	<< Object::sqlStatement() << ", "
-	<< "Function=" << Object::objectId(this->function()) << ", "
-	<< "Type=" << Object::objectId(this->type()) << ", "
-	<< "TypeExpression=\"" << Object::sqlFilteredString(this->typeExpression()) << "\", "
-	<< "Value=" << Object::objectId(this->value()) << ", "
-	<< "ValueExpression=\"" << Object::sqlFilteredString(this->valueExpression()) << "\""
-	;
-	
-	std::cout << "statement: " << sstream.str() << std::endl;
-	
-	return sstream.str();
+	return "Locals";
+}
+
+std::size_t Local::sqlSize() const
+{
+	return Object::sqlSize() + 5;
+}
+
+Object::SqlColumn Local::sqlNames() const
+{
+	SqlColumn result = Object::sqlNames();
+	result.push_back("Function");
+	result.push_back("Type");
+	result.push_back("TypeExpression");
+	result.push_back("Value");
+	result.push_back("ValueExpression");
+
+	return result;
+}
+
+Object::SqlColumn Local::sqlTypes() const
+{
+	SqlColumn result = Object::sqlTypes();
+	result.push_back("INT");
+	result.push_back("INT");
+	result.push_back("VARCHAR(50)");
+	result.push_back("INT");
+	result.push_back("VARCHAR(50)");
+
+	return result;
+}
+
+Object::SqlColumn Local::sqlValues() const
+{
+	SqlColumn result = Object::sqlValues();
+	result.push_back(objectIdString(this->function()));
+	result.push_back(objectIdString(this->type()));
+	result.push_back(sqlFilteredString(this->typeExpression()));
+	result.push_back(objectIdString(this->value()));
+	result.push_back(sqlFilteredString(this->valueExpression()));
+
+	return result;
 }
 #endif
 
