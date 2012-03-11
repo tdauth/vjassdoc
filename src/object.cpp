@@ -286,7 +286,7 @@ class Object* Object::findValue(class Object *type, std::string &valueExpression
 				{
 					//FIXME Error? Test it!
 					//valueContainer = static_cast<class Struct*>(this->container())->extension();
-					std::cout << "super" << std::endl;
+					//std::cout << "super" << std::endl;
 				}
 
 				//FIXME, does not work
