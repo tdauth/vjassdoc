@@ -13,6 +13,7 @@ configure_file (
 	"${PROJECT_SOURCE_DIR}/vjassdocConfig.h.in"
 	"${PROJECT_BINARY_DIR}/vjassdocConfig.h"
 )
+install(FILES "${PROJECT_BINARY_DIR}/vjassdocConfig.h" DESTINATION include/vjassdoc/)
 
 include_directories("${PROJECT_BINARY_DIR}")
 

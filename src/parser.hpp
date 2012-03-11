@@ -33,7 +33,6 @@
 #include <boost/cast.hpp>
 
 #include "object.hpp"
-#include "vjassdocConfig.h"
 
 namespace vjassdoc
 {

@@ -30,7 +30,6 @@
 #include <boost/cstdint.hpp>
 
 #include "internationalisation.hpp"
-#include "vjassdocConfig.h"
 
 namespace vjassdoc
 {

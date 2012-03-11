@@ -32,7 +32,7 @@
 namespace vjassdoc
 {
 
-const char *Vjassdoc::version = vjassdoc_VERSION;
+const char *Vjassdoc::version = "0.4";
 #ifdef SQLITE
 const bool Vjassdoc::supportsDatabaseCreation = true;
 #else
