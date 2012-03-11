@@ -64,6 +64,7 @@ set(VJASSDOC_H
 	compiler.hpp
 	vjassdoc.hpp
 	utilities.hpp
+	internationalisation.hpp
 )
 
 # library
