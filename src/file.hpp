@@ -21,9 +21,9 @@
 #ifndef VJASSDOC_FILE_HPP
 #define VJASSDOC_FILE_HPP
 
-#include <list>
 #include <string>
 #include <fstream>
+#include <list>
 
 #include "library.hpp"
 
@@ -142,6 +142,7 @@ class File
 		  * @return Returns number of parsed lines.
 		*/
 		std::string::size_type parse(class Parser *parser, std::ifstream &ifstream);
+		const std::list<std::string>& imports() const;
 
 	private:
 		File::Expression getFirstLineExpression(std::string &line, std::string::size_type &index);
@@ -193,7 +194,14 @@ class File
 		std::string m_currentBlockDocComment;
 
 		bool m_gotDocComment;
+		std::list<std::string> m_imports;
 };
+
+inline const std::list<std::string>& File::imports() const
+{
+	return this->m_imports;
+}
+
 
 }
 

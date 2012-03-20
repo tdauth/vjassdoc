@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6.4)
+cmake_minimum_required(VERSION 2.6)
 
 project(vjassdoc)
 
@@ -40,7 +40,7 @@ endif ()
 #find_package(GLIB2 REQUIRED)
 
 # todo: require tokenizer component.
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
 if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})

@@ -236,64 +236,14 @@ std::size_t File::parse(class Parser *parser, std::ifstream &ifstream)
 				{
 					std::string filePath = getToken(line, index, true);
 					filePath = filePath.substr(1, filePath.length() - 2);
-					std::string openPath;
-					std::ifstream fin;
-					bool result = false;
-					std::list<std::string> list = parser->parent()->optionImport();
-					std::list<std::string>::const_iterator iterator = list.begin();
 
-					while (iterator != list.end())
-					{
-						openPath = *iterator;
+					if (parser->parent()->optionVerbose())
+						std::cout << boost::format(_("Importing file %1%.")) % filePath << std::endl;
 
-						if (openPath[openPath.length() - 1] != dirSeparator)
-							openPath += dirSeparator;
-
-						openPath += filePath;
-						fin.open(openPath.c_str(), std::ios_base::ate);
-
-						if (fin.good())
-						{
-							result = true;
-							fin.close(); //TODO Just close if good?
-
-							break;
-						}
-
-						++iterator;
-					}
-
-					if (!result)
-					{
-						fin.open(filePath.c_str(), std::ios_base::ate);
-
-						if (fin.good())
-							fin.close(); /// @todo Just close if good?
-						else
-						{
-							fprintf(stderr, _("Was unable to import file %s.\n"), filePath.c_str());
-							continue;
-						}
-					}
-
-					if (result)
-					{
-						if (parser->parent()->optionVerbose())
-							printf(_("Importing file %s.\n"), openPath.c_str());
-
-						SourceFile *sourceFile = new SourceFile(parser, filePath, openPath);
-						this->m_parser->add(sourceFile);
-						this->clearDocComment();
-					}
-					else
-					{
-						if (parser->parent()->optionVerbose())
-							printf(_("Importing file %s.\n"), filePath.c_str());
-
-						SourceFile *sourceFile = new SourceFile(parser, filePath, filePath);
-						this->m_parser->add(sourceFile);
-						this->clearDocComment();
-					}
+					SourceFile *sourceFile = new SourceFile(parser, filePath, filePath);
+					this->m_imports.push_back(filePath);
+					this->m_parser->add(sourceFile);
+					this->clearDocComment();
 				}
 				else if (preprocessor == expressionText[TextmacroExpression])
 					this->getTextMacro(line, index, false);
@@ -1427,16 +1377,14 @@ void File::getLibrary(const std::string &line, std::string::size_type &index, bo
 		token = getToken(line, index);
 	}
 
-	Library::RequirementsContainer *requirements;
-
-	if (token == expressionText[RequiresExpression] || token == expressionText[NeedsExpression] || token == expressionText[UsesExpression])
-		requirements = this->getLibraryRequirement(line, index);
-
-	class Library *library = new Library(m_parser, identifier, this->m_parser->currentSourceFile(), this->m_currentLine, this->m_currentDocComment, isOnce, initializer, requirements);
+	class Library *library = new Library(m_parser, identifier, this->m_parser->currentSourceFile(), this->m_currentLine, this->m_currentDocComment, isOnce, initializer);
 	this->m_isInLibrary = true;
 	this->m_currentLibrary = library;
 	this->m_parser->add(library);
 	this->clearDocComment();
+
+	if (token == expressionText[RequiresExpression] || token == expressionText[NeedsExpression] || token == expressionText[UsesExpression])
+		library->requirements().reset(this->getLibraryRequirement(line, index));
 }
 
 void File::getScope(const std::string &line, std::string::size_type &index, bool isPrivate)
@@ -1610,19 +1558,19 @@ Library::RequirementsContainer* File::getLibraryRequirement(const std::string &l
 		}
 
 		//cut the separator
-		if (libraryToken.substr(libraryToken.length() - 1, libraryToken.length()) == ",")
+		if (libraryToken[libraryToken.length() - 1] == ',')
 		{
 			libraryToken = libraryToken.substr(0, libraryToken.length() - 1);
 		//if there is no separator it must be the last required library
 		}
 		else
 		{
-			result->push_back(Library::Requirement(libraryToken, 0 , isOptional));
+			result->push_back(new Library::Requirement(libraryToken, 0, isOptional));
 
 			break;
 		}
 
-		result->push_back(Library::Requirement(libraryToken, 0 , isOptional));
+		result->push_back(new Library::Requirement(libraryToken, 0 , isOptional));
 	}
 
 	return result;

@@ -76,10 +76,10 @@ Call::~Call()
 
 void Call::init()
 {
-	this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Functions, this));
+	this->m_function = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Functions, this));
 
 	if (this->m_function == 0)
-		this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Methods, this));
+		this->m_function = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->m_functionIdentifier, Parser::Methods, this));
 
 	if (this->m_function != 0)
 		this->m_functionIdentifier.clear();

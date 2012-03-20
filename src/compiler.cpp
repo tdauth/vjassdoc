@@ -70,7 +70,7 @@ void Compiler::writeGlobals(std::ostream &fstream)
 
 	for (Parser::ObjectList::const_iterator iterator = list.begin(); iterator != list.end(); ++iterator)
 	{
-		const Global *global = boost::polymorphic_cast<const Global*>(iterator->second);
+		const Global *global = boost::polymorphic_downcast<const Global*>(iterator->second);
 
 		if (global->type() != 0)
 			fstream << global->type()->identifier();
@@ -99,7 +99,7 @@ void Compiler::writeMembers(std::ostream &fstream)
 
 	for (Parser::ObjectList::const_iterator iterator = list.begin(); iterator != list.end(); ++iterator)
 	{
-		const Member *member = boost::polymorphic_cast<const Member*>(iterator->second);
+		const Member *member = boost::polymorphic_downcast<const Member*>(iterator->second);
 
 		if (member->isDelegate())
 			continue;

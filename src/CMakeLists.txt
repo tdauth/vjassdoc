@@ -69,16 +69,16 @@ set(VJASSDOC_H
 
 # library
 add_library(vjassdoclib SHARED ${VJASSDOC_SRC})
-set_target_properties(vjassdoclib PROPERTIES LINK_INTERFACE_LIBRARIES "")
 target_link_libraries(vjassdoclib ${GETTEXT_LIBRARIES} ${Boost_LIBRARIES})
 if (SQLITE)
 	target_link_libraries(vjassdoclib ${SQLITE_LIBRARY})
 endif ()
+set_target_properties(vjassdoclib PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
 # program
 add_executable(vjassdoc main.cpp)
-set_target_properties(vjassdoc PROPERTIES LINK_INTERFACE_LIBRARIES "")
 target_link_libraries(vjassdoc vjassdoclib)
+set_target_properties(vjassdoc PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
 if (GUI)
 	add_subdirectory(gui)

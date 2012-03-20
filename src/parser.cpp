@@ -28,6 +28,8 @@
 #include <boost/foreach.hpp>
 #include <boost/cast.hpp>
 #include <boost/range.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef SQLITE
 #include <sqlite3.h>
@@ -135,7 +137,7 @@ void Parser::createInheritanceListPage()
 		BOOST_FOREACH(ObjectList::reference ref, this->m_interfaces)
 		{
 			fstream << "\t\t\t<li>" << ref.second->pageLink() << '\n';
-			this->getStructInheritanceList(boost::polymorphic_cast<Interface*>(ref.second), "\t\t\t\t", fstream);
+			this->getStructInheritanceList(boost::polymorphic_downcast<Interface*>(ref.second), "\t\t\t\t", fstream);
 			fstream << "\t\t\t</li>\n";
 		}
 
@@ -153,10 +155,10 @@ void Parser::createInheritanceListPage()
 
 		BOOST_FOREACH(ObjectList::reference ref, this->m_structs)
 		{
-			if (boost::polymorphic_cast<Struct*>(ref.second)->extension() == 0)
+			if (boost::polymorphic_downcast<Struct*>(ref.second)->extension() == 0)
 			{
 				fstream << "\t\t\t<li>" << ref.second->pageLink() << '\n';
-				this->getStructInheritanceList(boost::polymorphic_cast<Struct*>(ref.second), "\t\t\t\t", fstream);
+				this->getStructInheritanceList(boost::polymorphic_downcast<Struct*>(ref.second), "\t\t\t\t", fstream);
 				fstream << "\t\t\t</li>\n";
 			}
 		}
@@ -196,7 +198,7 @@ void Parser::createRequirementListPage()
 
 	BOOST_FOREACH(ObjectList::reference ref, this->m_libraries)
 	{
-		Library *library = boost::polymorphic_cast<Library*>(ref.second);
+		Library *library = boost::polymorphic_downcast<Library*>(ref.second);
 
 		//requirement has to be 0
 		if (library->requirements().get() != 0 && !library->requirements()->empty())
@@ -402,12 +404,7 @@ void Parser::parse(const std::list<std::string> &filePaths)
 		cutFilePath(identifier);
 		class SourceFile *sourceFile = new SourceFile(this, identifier, path);
 		this->add(sourceFile);
-	}
-
-	// new imports are added automatically in parseFile()
-	BOOST_FOREACH(ObjectList::reference ref, this->m_sourceFiles)
-	{
-		this->m_currentSourceFile = boost::polymorphic_cast<SourceFile*>(ref.second);
+		this->m_currentSourceFile = sourceFile;
 		this->parseFile(this->m_currentSourceFile->path());
 	}
 
@@ -975,23 +972,43 @@ std::list<class Object*> Parser::autoCompletion(const std::string &line, std::si
 
 void Parser::parseFile(const std::string &path)
 {
-	std::ifstream ifstream(path.c_str());
+	boost::filesystem::path realPath = path;
 
-	if (!ifstream)
+	if (!boost::filesystem::exists(realPath))
 	{
-		ifstream.close();
-		std::cerr << boost::format(_("Was unable to open file \"%1%\".")) % path << std::endl;
+		bool found = false;
 
-		return;
+		BOOST_FOREACH(const std::string &ref, this->parent()->optionImport())
+		{
+			realPath = boost::filesystem::path(ref) / path;
+
+			if (boost::filesystem::exists(realPath))
+			{
+				found = true;
+
+				break;
+			}
+			else
+				std::cout << "Not found " << realPath << std::endl;
+		}
+
+		if (!found)
+		{
+			std::cerr << boost::format(_("Was unable to open file \"%1%\".")) % path << std::endl;
+
+			return;
+		}
 	}
 
+	boost::filesystem::ifstream ifstream(realPath);
 	boost::scoped_ptr<File> file(new File());
-	std::size_t lines = file->parse(this, ifstream);
+	const std::size_t lines = file->parse(this, ifstream);
 	parent()->addLines(lines);
 	parent()->addFile();
 	std::cout << boost::format(_("Parsed file \"%1%\" successfully (number %2%, %3% lines).")) % path % parent()->files() % lines << std::endl;
 
-	ifstream.close();
+	BOOST_FOREACH(const std::string &ref, file->imports())
+		this->parseFile(ref);
 }
 
 Parser::ObjectList& Parser::getList(enum Parser::List list)
@@ -1504,7 +1521,7 @@ void Parser::getStructInheritanceList(const class Interface *extension, const st
 	BOOST_FOREACH(SpecificObjectList::reference ref, structList)
 	{
 		ostream << prefix << "\t<li>" << ref.second->pageLink() << '\n';
-		this->getStructInheritanceList(boost::polymorphic_cast<Interface*>(ref.second), prefix + "\t\t", ostream);
+		this->getStructInheritanceList(boost::polymorphic_downcast<Interface*>(ref.second), prefix + "\t\t", ostream);
 		ostream << prefix << "\t</li>\n";
 	}
 
@@ -1523,7 +1540,7 @@ void Parser::getLibraryRequirementList(const class Library *requirement, const s
 	BOOST_FOREACH(SpecificObjectList::reference ref, specifiedList)
 	{
 		ostream << prefix << "\t<li>" << ref.second->pageLink() << '\n';
-		this->getLibraryRequirementList(boost::polymorphic_cast<Library*>(ref.second), prefix + "\t\t", ostream);
+		this->getLibraryRequirementList(boost::polymorphic_downcast<Library*>(ref.second), prefix + "\t\t", ostream);
 		ostream << prefix << "\t</li>\n";
 	}
 

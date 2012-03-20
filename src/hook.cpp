@@ -59,15 +59,15 @@ Hook::~Hook()
 
 void Hook::init()
 {
-	this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Functions, this));
+	this->m_function = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Functions, this));
 
 	if (this->m_function == 0)
-		this->m_function = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Methods, this));
+		this->m_function = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->functionExpression(), Parser::Methods, this));
 
-	this->m_hookFunction = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Functions, this));
+	this->m_hookFunction = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Functions, this));
 
 	if (this->m_hookFunction == 0)
-		this->m_hookFunction = boost::polymorphic_cast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Methods, this));
+		this->m_hookFunction = boost::polymorphic_downcast<class Function*>(this->parser()->searchObjectInList(this->hookFunctionExpression(), Parser::Methods, this));
 }
 
 void Hook::pageNavigation(std::ofstream &file) const

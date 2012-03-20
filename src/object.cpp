@@ -140,9 +140,9 @@ void Object::initBySql(const SqlColumn &column)
 	this->m_identifier = column[1];
 	this->m_line = boost::lexical_cast<Parser::IdType>(column[2]);
 	const Parser::IdType sourceFileId = boost::lexical_cast<Parser::IdType>(column[3]);
-	this->m_sourceFile = boost::polymorphic_cast<class SourceFile*>(this->parser()->searchObjectInLastDatabase(sourceFileId));
+	this->m_sourceFile = boost::polymorphic_downcast<class SourceFile*>(this->parser()->searchObjectInLastDatabase(sourceFileId));
 	const Parser::IdType docCommentId = boost::lexical_cast<Parser::IdType>(column[4]);
-	this->m_docComment = boost::polymorphic_cast<class DocComment*>(this->parser()->searchObjectInLastDatabase(docCommentId));
+	this->m_docComment = boost::polymorphic_downcast<class DocComment*>(this->parser()->searchObjectInLastDatabase(docCommentId));
 
 	if (this->m_docComment != 0)
 		this->m_docComment->setObject(this);

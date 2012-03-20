@@ -62,7 +62,7 @@ void Library::initClass()
 }
 #endif
 
-Library::Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, DocComment *docComment, bool isOnce, const std::string &initializerExpression, RequirementsContainer *requirements) : Object(parser, identifier, sourceFile, line, docComment), m_isOnce(isOnce), initializerExpression(initializerExpression), m_initializer(0), m_requirements(requirements)
+Library::Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, DocComment *docComment, bool isOnce, const std::string &initializerExpression) : Object(parser, identifier, sourceFile, line, docComment), m_isOnce(isOnce), initializerExpression(initializerExpression), m_initializer(0)
 {
 }
 
@@ -80,10 +80,10 @@ void Library::init()
 {
 	if (!this->initializerExpression.empty())
 	{
-		this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
+		this->m_initializer = boost::polymorphic_downcast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
 
 		if (this->m_initializer == 0)
-			this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
+			this->m_initializer = boost::polymorphic_downcast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
 
 		if (this->m_initializer != 0)
 			this->initializerExpression.clear();
@@ -95,7 +95,7 @@ void Library::init()
 	{
 		BOOST_FOREACH(RequirementsContainer::reference ref, *this->requirements())
 		{
-			Library *object = boost::polymorphic_cast<Library*>(this->parser()->searchObjectInList(ref.expression(), Parser::Libraries, this));
+			Library *object = boost::polymorphic_downcast<Library*>(this->parser()->searchObjectInList(ref.expression(), Parser::Libraries, this));
 
 			if (object != 0)
 			{

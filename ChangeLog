@@ -1,3 +1,8 @@
+2012-03-20 Tamino Dauth <tamino@cdauth.de>
+* Replaces missuses of boost::polymorphic_cast by boost::polymorphic_downcast.
+* Fixed import dir recognition.
+* Some code optimization.
+
 2012-03-10 Tamino Dauth <tamino@cdauth.de>
 * Parser::getSpecificList() is template-based now which improves type-safety.
 * Added class Library::Requirement.

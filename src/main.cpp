@@ -246,8 +246,8 @@ int main(int argc, char *argv[])
 				_("\t-B --databases <args>       <args> has to be replaced by the SQLite3 databases which should be added to the output.\n") <<
 #endif
 				std::endl <<
-				_("Several arguments has to be separated by using the : character.\n") <<
-				_("\nReport bugs to tamino@cdauth.de or on http://sourceforge.net/projects/vjasssdk/") <<
+				_("Several arguments (indicated by \"<args>\") have to be separated by using the : character.\n") <<
+				_("\nReport bugs to tamino@cdauth.de or on https://wc3lib.org") <<
 				std::endl;
 
 				return EXIT_SUCCESS;

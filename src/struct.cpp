@@ -81,19 +81,19 @@ void Struct::init()
 
 	if (!this->m_extensionExpression.empty() && this->m_extensionExpression.find(File::expressionText[File::ArrayExpression]) != 0)
 	{
-		this->m_extension = boost::polymorphic_cast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Interfaces, this));
+		this->m_extension = boost::polymorphic_downcast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Interfaces, this));
 
 		if (this->m_extension == 0)
-			this->m_extension = boost::polymorphic_cast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Structs, this));
+			this->m_extension = boost::polymorphic_downcast<class Interface*>(this->parser()->searchObjectInList(this->m_extensionExpression, Parser::Structs, this));
 
 		if (this->m_extension != 0)
 			this->m_extensionExpression.clear();
 	}
 
 	m_container = this;
-	this->m_constructor = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("create", Parser::Methods, Parser::CheckContainer, this));
-	this->m_destructor = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("onDestroy", Parser::Methods, Parser::CheckContainer, this));
-	this->m_initializer = boost::polymorphic_cast<class Method*>(this->parser()->searchObjectInList("onInit", Parser::Methods, Parser::CheckContainer, this));
+	this->m_constructor = boost::polymorphic_downcast<class Method*>(this->parser()->searchObjectInList("create", Parser::Methods, Parser::CheckContainer, this));
+	this->m_destructor = boost::polymorphic_downcast<class Method*>(this->parser()->searchObjectInList("onDestroy", Parser::Methods, Parser::CheckContainer, this));
+	this->m_initializer = boost::polymorphic_downcast<class Method*>(this->parser()->searchObjectInList("onInit", Parser::Methods, Parser::CheckContainer, this));
 }
 
 void Struct::pageNavigation(std::ofstream &file) const

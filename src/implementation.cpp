@@ -56,7 +56,7 @@ Implementation::Implementation(std::vector<const unsigned char*> &columnVector) 
 void Implementation::init()
 {
 	//std::cout << "Before search of " << this->moduleExpression() << std::endl;
-	this->m_module = boost::polymorphic_cast<class Module*>(this->parser()->searchObjectInList(this->moduleExpression(), Parser::Modules, this));
+	this->m_module = boost::polymorphic_downcast<class Module*>(this->parser()->searchObjectInList(this->moduleExpression(), Parser::Modules, this));
 	//std::cout << "Searching for module " << this->moduleExpression() << std::endl;
 
 	if (this->m_module != 0)

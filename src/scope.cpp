@@ -57,10 +57,10 @@ void Scope::init()
 {
 	if (!this->initializerExpression.empty())
 	{
-		this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
+		this->m_initializer = boost::polymorphic_downcast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Functions, this));
 
 		if (this->m_initializer == 0)
-			this->m_initializer = boost::polymorphic_cast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
+			this->m_initializer = boost::polymorphic_downcast<Function*>(this->parser()->searchObjectInList(this->initializerExpression, Parser::Methods, this));
 
 		if (this->m_initializer != 0)
 			this->initializerExpression.clear();

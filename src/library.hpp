@@ -22,6 +22,7 @@
 #define VJASSDOC_LIBRARY_HPP
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/ptr_container/ptr_list.hpp>
 
 #include "object.hpp"
 
@@ -53,7 +54,7 @@ class Library : public Object
 				bool m_isOptional;
 		};
 
-		typedef std::list<Requirement> RequirementsContainer;
+		typedef boost::ptr_list<Requirement> RequirementsContainer;
 		typedef boost::scoped_ptr<RequirementsContainer> Requirements;
 
 #ifdef SQLITE
@@ -63,7 +64,7 @@ class Library : public Object
 
 		static void initClass();
 #endif
-		Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &initializerExpression, RequirementsContainer *requirements);
+		Library(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, bool isOnce, const std::string &initializerExpression);
 		Library(std::vector<const unsigned char*> &columnVector);
 		virtual ~Library();
 		virtual void init();

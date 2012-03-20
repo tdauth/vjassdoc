@@ -42,7 +42,7 @@ void Member::init()
 	else if (this->typeExpression() == File::expressionText[File::SuperExpression])
 	{
 		/// @todo ERROR
-		this->m_typeExpression = boost::polymorphic_cast<class Struct*>(this->container())->extensionExpression(); /// use expression since structs are initialized after members.
+		this->m_typeExpression = boost::polymorphic_downcast<class Struct*>(this->container())->extensionExpression(); /// use expression since structs are initialized after members.
 	}
 
 	Global::init();

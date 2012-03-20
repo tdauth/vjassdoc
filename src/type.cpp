@@ -41,7 +41,7 @@ void Type::init()
 {
 	if (!this->typeExpression.empty())
 	{
-		this->m_type = boost::polymorphic_cast<Type*>(this->parser()->searchObjectInList(this->typeExpression, Parser::Types));
+		this->m_type = boost::polymorphic_downcast<Type*>(this->parser()->searchObjectInList(this->typeExpression, Parser::Types));
 
 		if (this->m_type != 0)
 			this->typeExpression.clear();

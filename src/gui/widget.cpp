@@ -96,6 +96,7 @@ void Widget::run()
 #endif
 
 	m_app->run();
+	KMessageBox::information(this, tr("Finished API generation!"));
 }
 
 void Widget::selectFile()

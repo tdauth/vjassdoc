@@ -138,7 +138,7 @@ void Interface::getMemberList(std::ofstream &file, const Parser::SpecificObjectL
 
 		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, memberList)
 		{
-			const Member *member = boost::polymorphic_cast<Member*>(ref.second);
+			const Member *member = boost::polymorphic_downcast<Member*>(ref.second);
 
 			file << "\t\t\t<li>";
 
@@ -187,7 +187,7 @@ void Interface::getImplementationList(std::ofstream &file) const
 
 		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, implementationList)
 		{
-			const Implementation *implementation = boost::polymorphic_cast<Implementation*>(ref.second);
+			const Implementation *implementation = boost::polymorphic_downcast<Implementation*>(ref.second);
 
 			file << "\t\t\t<li>";
 
@@ -214,7 +214,7 @@ void Interface::getMethodList(std::ofstream &file, const Parser::SpecificObjectL
 
 		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, methodList)
 		{
-			const Method *method = boost::polymorphic_cast<Method*>(ref.second);
+			const Method *method = boost::polymorphic_downcast<Method*>(ref.second);
 
 			file << "\t\t\t<li>";
 

@@ -289,18 +289,9 @@ Object* Parser::searchObjectInCustomList(ListType &objectList, const std::string
 		return 0;
 
 	Object *resultObject = 0;
-	bool checkContainer = false;
-	bool checkScope = false;
-	bool checkLibrary = false;
-
-	if ((object != 0 && object->container() != 0) || searchMode & CheckContainer)
-		checkContainer = true;
-
-	if ((object != 0 && object->scope() != 0) || searchMode & CheckScope)
-		checkScope = true;
-
-	if ((object != 0 && object->library() != 0) || searchMode & checkLibrary)
-		checkLibrary = true;
+	bool checkContainer = object != 0 && (object->container() != 0 || searchMode & CheckContainer);
+	bool checkScope = object != 0 && (object->scope() != 0 || searchMode & CheckScope);
+	bool checkLibrary = object != 0 && (object->library() != 0 || searchMode & checkLibrary);
 
 	for (typename ListType::iterator iterator = range.begin(); iterator != range.end(); ++iterator)
 	{
@@ -380,7 +371,7 @@ Parser::SpecificObjectList Parser::getSpecificList(Parser::List list, const Obje
 
 	BOOST_FOREACH(ObjectList::reference ref, objectList)
 	{
-		if (comp(boost::polymorphic_cast<typename ComparatorType::first_argument_type>(ref.second), boost::polymorphic_cast<typename ComparatorType::second_argument_type>(object)))
+		if (comp(boost::polymorphic_downcast<typename ComparatorType::first_argument_type>(ref.second), boost::polymorphic_downcast<typename ComparatorType::second_argument_type>(object)))
 		{
 			SpecificObjectList::value_type value = SpecificObjectList::value_type(ref.first, ref.second);
 			result.insert(value);

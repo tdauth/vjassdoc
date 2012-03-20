@@ -1,0 +1,7 @@
+2012-03-20 Tamino Dauth <tamino@cdauth.eu>
+* Finish SQLite revision.
+* Redirect stdout and stderr to the output text browser using gui::RunThread.
+* Improve output HTML pages.
+* Maybe use something like an XML stream.
+* Use union-based (maybe boost::variant) types for expressions with corresponding objects.
+* Resolve text macro instances.

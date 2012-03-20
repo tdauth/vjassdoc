@@ -75,7 +75,7 @@ void TextMacro::page(std::ofstream &file) const
 
 		BOOST_FOREACH(Parser::SpecificObjectList::const_reference ref, instanceList)
 		{
-			TextMacroInstance *instance = boost::polymorphic_cast<TextMacroInstance*>(ref.second);
+			TextMacroInstance *instance = boost::polymorphic_downcast<TextMacroInstance*>(ref.second);
 
 			file << "\t\t\t<li>";
 			file << Object::objectPageLink(instance->sourceFile()) << " - " << Object::objectPageLink(instance);

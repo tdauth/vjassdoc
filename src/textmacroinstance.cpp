@@ -42,7 +42,7 @@ void TextMacroInstance::init()
 	TextMacro::init();
 
 	// mustn't be empty
-	this->m_textMacro = boost::polymorphic_cast<class TextMacro*>(this->parser()->searchObjectInList(this->identifier(), Parser::TextMacros, this));
+	this->m_textMacro = boost::polymorphic_downcast<class TextMacro*>(this->parser()->searchObjectInList(this->identifier(), Parser::TextMacros, this));
 }
 
 void TextMacroInstance::pageNavigation(std::ofstream &file) const
