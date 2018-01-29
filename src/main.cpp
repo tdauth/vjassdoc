@@ -174,7 +174,9 @@ int main(int argc, char *argv[])
 		optionShortcut = getopt_long(argc, argv, "VhjdpmflgsxC:L:vtaT:I:D:B:", options, &optionIndex);
 
 		if (optionShortcut == -1)
+		{
 			break;
+		}
 
 		switch (optionShortcut)
 		{
@@ -422,13 +424,13 @@ int main(int argc, char *argv[])
 	if (title.empty())
 		title = _("vJass API Documentation");
 
-	boost::scoped_ptr<Vjassdoc> program(new Vjassdoc(jass, debug, parsePrivate, textmacros, functions, html, pages, specialPages, syntax, compileFilePath, databaseFilePath, verbose, time, alphabetical, parseObjectsOfList, title, dir, importDirs, filePaths, databases));
+	Vjassdoc program(jass, debug, parsePrivate, textmacros, functions, html, pages, specialPages, syntax, compileFilePath, databaseFilePath, verbose, time, alphabetical, parseObjectsOfList, title, dir, importDirs, filePaths, databases);
 
 #ifdef SQLITE
-	program->initClasses();
+	program.initClasses();
 #endif
 
-	program->run();
+	program.run();
 
 	return EXIT_SUCCESS;
 }
