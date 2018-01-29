@@ -80,6 +80,11 @@ add_executable(vjassdoc main.cpp)
 target_link_libraries(vjassdoc vjassdoclib)
 set_target_properties(vjassdoc PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
+
+add_executable(autocompletion autocompletion.cpp)
+target_link_libraries(autocompletion vjassdoclib)
+set_target_properties(autocompletion PROPERTIES LINK_INTERFACE_LIBRARIES "")
+
 add_subdirectory(test)
 
 if (GUI)
@@ -100,5 +105,6 @@ install(TARGETS
 
 install(TARGETS
 	vjassdoc
+	autocompletion
 	DESTINATION bin
 )

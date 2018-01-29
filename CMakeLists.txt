@@ -66,4 +66,3 @@ add_definitions(-DLOCALE_DIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
 
 add_subdirectory(src)
 add_subdirectory(locale)
-add_subdirectory(tests)
