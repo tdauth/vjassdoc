@@ -11,6 +11,8 @@ enable_testing()
 
 include(CTest)
 
+add_compile_options(-Wall -std=c++14)
+
 # configure a header file to pass some of the CMake settings
 # to the source codeB
 configure_file (

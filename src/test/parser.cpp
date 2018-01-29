@@ -23,6 +23,7 @@
 
 #include "vjassdoc.hpp"
 #include "parser.hpp"
+#include "objects.hpp"
 
 using namespace vjassdoc;
 
@@ -61,4 +62,23 @@ BOOST_AUTO_TEST_CASE(ParseFunction)
 	Vjassdoc program(false, false, true, true, true, false, false, false, true, "", "", false, false, false, parseObjectsOfList, "Test", "", importDirs, filePaths, databases);
 	Parser parser(&program);
 	parser.parse(filePaths);
+	BOOST_REQUIRE_EQUAL(1, parser.getList(Parser::Functions).size());
+	Function *f = dynamic_cast<Function*>(parser.searchObjectInList("pow", Parser::Functions));
+	BOOST_REQUIRE(f != nullptr);
+	BOOST_CHECK(!f->isPublic());
+	BOOST_CHECK(!f->isConstant());
+	BOOST_CHECK(!f->isNative());
+	BOOST_CHECK(f->library() == nullptr);
+	BOOST_CHECK(f->scope() == nullptr);
+	BOOST_CHECK(!f->isPrivate());
+	BOOST_CHECK_EQUAL(2, f->parameters().size());
+	const FunctionInterface::Parameters &parameters = f->parameters();
+	BOOST_CHECK_EQUAL("a", parameters.front()->identifier());
+	BOOST_CHECK(parameters.front()->type() != nullptr);
+	BOOST_CHECK_EQUAL(parser.integerType(), parameters.front()->type());
+	BOOST_CHECK_EQUAL("b", parameters.back()->identifier());
+	BOOST_CHECK(parameters.back()->type() != nullptr);
+	BOOST_CHECK_EQUAL(parser.integerType(), parameters.back()->type());
+	BOOST_CHECK(f->returnType() != nullptr);
+	BOOST_CHECK_EQUAL(parser.integerType(), f->returnType());
 }

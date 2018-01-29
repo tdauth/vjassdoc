@@ -207,11 +207,11 @@ class Parser
 		void add(class SyntaxError *syntaxError);
 
 		/**
-		* Parses line @p line from index @p index to the end of line and generates a list of possible objects.
+		* Parses line \p line from index \p index to the end of line and generates a list of possible objects.
 		* This can be useful for IDEs or other editors to create an auto completion for their users.
-		* @param line The code line.
-		* @param index Start index of code line for the parser.
-		* @return A list filled with possible objects.
+		* \param line The code line.
+		* \param index Start index of code line for the parser.
+		* \return A list filled with possible objects.
 		*/
 		std::list<Object*> autoCompletion(const std::string &line, std::size_t &index);
 	private:
@@ -292,7 +292,7 @@ Object* Parser::searchObjectInCustomList(ListType &objectList, const std::string
 	Object *resultObject = 0;
 	bool checkContainer = object != 0 && (object->container() != 0 || searchMode & CheckContainer);
 	bool checkScope = object != 0 && (object->scope() != 0 || searchMode & CheckScope);
-	bool checkLibrary = object != 0 && (object->library() != 0 || searchMode & checkLibrary);
+	bool checkLibrary = object != 0 && (object->library() != 0 || searchMode & CheckLibrary);
 
 	for (typename ListType::iterator iterator = range.begin(); iterator != range.end(); ++iterator)
 	{

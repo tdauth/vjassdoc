@@ -27,6 +27,7 @@ namespace vjassdoc
 {
 
 class Parameter;
+class Parser;
 
 class FunctionInterface : public Object
 {
@@ -38,7 +39,9 @@ class FunctionInterface : public Object
 
 		static void initClass();
 #endif
-		FunctionInterface(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, std::list<class Parameter*> parameters, const std::string &returnTypeExpression);
+		typedef std::list<Parameter*> Parameters;
+
+		FunctionInterface(Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, class Library *library, class Scope *scope, bool isPrivate, Parameters parameters, const std::string &returnTypeExpression);
 #ifdef SQLITE
 		FunctionInterface(std::vector<const unsigned char*> &columnVector);
 #endif
@@ -52,7 +55,7 @@ class FunctionInterface : public Object
 		virtual class Library* library() const;
 		virtual class Scope* scope() const;
 		bool isPrivate() const;
-		const std::list<class Parameter*>& parameters() const;
+		const Parameters& parameters() const;
 		class Object* returnType() const; //Type, Function Interface, Interface, Struct
 		const std::string& returnTypeExpression() const;
 
@@ -61,7 +64,7 @@ class FunctionInterface : public Object
 		class Library *m_library;
 		class Scope *m_scope;
 		bool m_isPrivate;
-		std::list<class Parameter*> m_parameters;
+		Parameters m_parameters;
 		class Object *m_returnType;
 		std::string m_returnTypeExpression;
 };
@@ -71,7 +74,7 @@ inline bool FunctionInterface::isPrivate() const
 	return this->m_isPrivate;
 }
 
-inline const std::list<class Parameter*>& FunctionInterface::parameters() const
+inline const FunctionInterface::Parameters& FunctionInterface::parameters() const
 {
 	return this->m_parameters;
 }

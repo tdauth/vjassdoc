@@ -145,14 +145,18 @@ std::size_t File::parse(class Parser *parser, std::ifstream &ifstream)
 		expression = this->getFirstLineExpression(line, index);
 
 		if (expression == File::NoExpression || expression == File::InvalidExpression || expression == File::DebugExpression || expression == File::CustomExpression)
+		{
 			continue;
+		}
 
 		switch (expression)
 		{
 			//optional
 			case DocCommentExpression:
+			{
 				this->getDocComment(line, index);
 				break;
+			}
 
 			case CommentExpression:
 			{
@@ -218,14 +222,18 @@ std::size_t File::parse(class Parser *parser, std::ifstream &ifstream)
 			}
 
 			case KeywordExpression:
+			{
 				this->truncateComments(line, index);
 				this->getKeyword(line, index, false);
 				break;
+			}
 
 			case KeyExpression:
+			{
 				this->truncateComments(line, index);
 				this->getKey(line, index, false);
 				break;
+			}
 
 			case PreprocessorExpression:
 			{
@@ -246,11 +254,17 @@ std::size_t File::parse(class Parser *parser, std::ifstream &ifstream)
 					this->clearDocComment();
 				}
 				else if (preprocessor == expressionText[TextmacroExpression])
+				{
 					this->getTextMacro(line, index, false);
+				}
 				else if (preprocessor == expressionText[TextmacroonceExpression])
+				{
 					this->getTextMacro(line, index, true);
+				}
 				else if (preprocessor == expressionText[RuntextmacroExpression])
+				{
 					this->getTextMacroInstance(line, index);
+				}
 				//NOTE Syntax checker!
 				else if (parser->parent()->optionSyntax() && preprocessor != expressionText[DovjassinitExpression] && preprocessor != expressionText[InjectExpression] && preprocessor != expressionText[EndinjectExpression] && preprocessor != expressionText[NovjassExpression] && preprocessor != expressionText[EndnovjassExpression] && preprocessor != expressionText[LoaddataExpression] && preprocessor != expressionText[ExternalExpression])
 				{
