@@ -37,6 +37,7 @@
 namespace vjassdoc
 {
 
+class Object;
 class Comment;
 class Keyword;
 class TextMacro;
@@ -64,7 +65,7 @@ class SyntaxError;
 * Provides methods for parsing Jass and vJass files. The Parser class has the ability to create a simple HTML
 * API documentation and/or a SQLite3 database.
 * It contains a list for each Object child class.
-* \ref File is the class which handles real specific Jass and vJass parsing. Parser does create one or several File instances by getting all file paths from class @class Vjassdoc.
+* \ref File is the class which handles real specific Jass and vJass parsing. Parser does create one or several File instances by getting all file paths from class \ref Vjassdoc.
 * After parsing all of those files it is able to create an HTML documentation and an SQLite3 database.
 * Besides it provides several search functions which are required for object initialization which usually is runned after parsing for each parsed object.
 * \sa Vjassdoc, File
@@ -114,15 +115,15 @@ class Parser
 
 		/**
 		* Sometimes it can be really useful to create your own small object list. In that case you'll probably want to be able to search in your custom list.
-		* @param objectList User-defined custom list where the method has to search.
-		* @param identifier Object identifier which is searched for.
-		* @param searchMode Used search mode. Check out @ref Parser::SearchMode.
-		* @param object Object instance used for comparisons. If searchMode is \ref Parser::SearchMode::Unspecified this value can be 0.
-		* @return If no object was found it will return 0.
+		* \param objectList User-defined custom list where the method has to search.
+		* \param identifier Object identifier which is searched for.
+		* \param searchMode Used search mode. Check out \ref Parser::SearchMode.
+		* \param object Object instance used for comparisons. If searchMode is \ref Parser::SearchMode::Unspecified this value can be 0.
+		* \return If no object was found it will return 0.
 		* \sa Parser::getSpecificList, Parser::searchObjectInLastDatabase, Parser::searchObjectInList
 		*/
 		template<typename ListType>
-		static class Object* searchObjectInCustomList(ListType &objectList, const std::string &identifier, Parser::SearchMode searchMode = Unspecified, const class Object *object = 0);
+		static Object* searchObjectInCustomList(ListType &objectList, const std::string &identifier, Parser::SearchMode searchMode = Unspecified, const Object *object = 0);
 
 		Parser(class Vjassdoc *parent);
 		~Parser();
@@ -141,22 +142,22 @@ class Parser
 		int addDatabase(const std::string &filePath);
 		void removeDatabase(const int &index);
 		/**
-		* Searches for an object with id @param id in last added database. Each id has to be unique so there only can be one hit.
-		* @return If no object was found it will return 0.
+		* Searches for an object with id \p id in last added database. Each id has to be unique so there only can be one hit.
+		* \return If no object was found it will return 0.
 		*/
-		class Object* searchObjectInLastDatabase(const unsigned int &id);
+		Object* searchObjectInLastDatabase(const unsigned int &id);
 #endif
 
 		/**
 		* Searches for an object in one of the parsers lists.
-		* @param identifier Object identifier which is searched for.
-		* @param list Parser list which is searched in. Check out @ref Parser::List.
-		* @param searchMode Used search mode. Check out @ref Parser::SearchMode.
-		* @param object Object instance used for comparisons. If searchMode is @ref Parser::SearchMode::Unspecified this value can be 0.
-		* @return If no object was found it will return 0.
+		* \param identifier Object identifier which is searched for.
+		* \param list Parser list which is searched in. Check out \ref Parser::List.
+		* \param searchMode Used search mode. Check out \ref Parser::SearchMode.
+		* \param object Object instance used for comparisons. If searchMode is \ref Parser::SearchMode::Unspecified this value can be 0.
+		* \return If no object was found it will return 0.
 		*/
-		class Object* searchObjectInList(const std::string &identifier, Parser::List list,  Parser::SearchMode searchMode = Unspecified, const class Object *object = 0);
-		class Object* searchObjectInList(const std::string &identifier, Parser::List list, const class Object *object);
+		Object* searchObjectInList(const std::string &identifier, Parser::List list,  Parser::SearchMode searchMode = Unspecified, const Object *object = 0);
+		Object* searchObjectInList(const std::string &identifier, Parser::List list, const Object *object);
 
 		/**
 		* Returns a user-specific list by iterating one of the parsers lists and calling a comparator.
@@ -167,7 +168,7 @@ class Parser
 		* @see Parser::searchObjectInCustomList
 		*/
 		template<typename ComparatorType>
-		SpecificObjectList getSpecificList(List list, const class Object *object = 0);
+		SpecificObjectList getSpecificList(List list, const Object *object = 0);
 		ObjectList& getList(enum List list);
 		const ObjectList& getList(enum List list) const;
 
@@ -212,13 +213,13 @@ class Parser
 		* @param index Start index of code line for the parser.
 		* @return A list filled with possible objects.
 		*/
-		std::list<class Object*> autoCompletion(const std::string &line, std::size_t &index);
+		std::list<Object*> autoCompletion(const std::string &line, std::size_t &index);
 	private:
 #ifdef SQLITE
 		struct Database
 		{
 			std::list<enum List> listList;
-			std::list<class Object*> objectList;
+			std::list<Object*> objectList;
 		};
 #endif
 
@@ -270,7 +271,7 @@ class Parser
 		static std::string getTableName(const enum Parser::List &list);
 		static unsigned int getTableColumns(const enum Parser::List &list);
 		static std::string getTableCreationStatement(const enum Parser::List &list);
-		static class Object* createObjectByVector(std::vector<const unsigned char*> &columnVector, const enum Parser::List &list);
+		static Object* createObjectByVector(std::vector<const unsigned char*> &columnVector, const enum Parser::List &list);
 #endif
 
 		void getStructInheritanceList(const class Interface *extension, const std::string &prefix, std::ostream &ostream);

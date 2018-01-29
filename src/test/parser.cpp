@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Tamino Dauth                                    *
+ *   Copyright (C) 2018 by Tamino Dauth                                    *
  *   tamino@cdauth.de                                                      *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,38 +18,47 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <string>
-#include <iostream>
-#include <cstdlib>
-
-#include <boost/scoped_ptr.hpp>
+#define BOOST_TEST_MODULE ParserTest
+#include <boost/test/unit_test.hpp>
 
 #include "vjassdoc.hpp"
-#include "objects.hpp"
+#include "parser.hpp"
 
 using namespace vjassdoc;
 
-int main()
+BOOST_AUTO_TEST_CASE(ParseFunction)
 {
-	std::string line;
-	std::cout << "Auto Completion test created by Tamino Dauth" << std::endl;
-	std::cout << "This test shows how the auto completion works." << std::endl;
-	std::cout << "Enter your code line, please." << std::endl;
-	std::cin >> line;
-	std::size_t index = 0;
-	std::cout << "Enter your line index number, please." << std::endl;
-	std::cin >> index;
-	// Usually you should call Vjassdoc::configure before using it.
-	boost::scoped_ptr<Vjassdoc> program(new Vjassdoc());
-
-	program->parser()->add(new Struct(program->parser(), "Hans", 0, 0, 0, 0, 0, false, std::string(), std::string()));
-	std::list<class Object*> results = program->parser()->autoCompletion(line, index);
-	std::cout << "Results:" << std::endl;
-
-	for (std::list<class Object*>::iterator iterator = results.begin(); iterator != results.end(); ++iterator)
+	bool parseObjectsOfList[Parser::MaxLists] =
 	{
-		std::cout << (*iterator)->identifier() << std::endl;
-	}
-
-	return EXIT_SUCCESS;
+		true, //comments
+		true, //keywords
+		true, //keys
+		true, //text macros
+		true, //text macro instances
+		true, //types
+		true, //locals
+		true, //globals
+		true, //members
+		true, //parameters
+		true, //function interfaces
+		true, //functions
+		true, //methods
+		true, //calls
+		true, //implementations
+		true, //hooks
+		true, //interfaces
+		true, //structs
+		true, //modules
+		true, //scopes
+		true, //libraries
+		true, //source files
+		true //doc comments
+	};
+	std::list<std::string> importDirs;
+	std::list<std::string> filePaths;
+	filePaths.push_back("function.j");
+	std::list<std::string> databases;
+	Vjassdoc program(false, false, true, true, true, false, false, false, true, "", "", false, false, false, parseObjectsOfList, "Test", "", importDirs, filePaths, databases);
+	Parser parser(&program);
+	parser.parse(filePaths);
 }

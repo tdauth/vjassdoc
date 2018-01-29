@@ -7,6 +7,10 @@ set(vjassdoc_VERSION_MAJOR 0)
 set(vjassdoc_VERSION_MINOR 4)
 set(vjassdoc_VERSION "${vjassdoc_VERSION_MAJOR}.${vjassdoc_VERSION_MINOR}")
 
+enable_testing()
+
+include(CTest)
+
 # configure a header file to pass some of the CMake settings
 # to the source codeB
 configure_file (
@@ -39,8 +43,8 @@ endif ()
 # todo: require GNU C library for getopt
 #find_package(GLIB2 REQUIRED)
 
-# todo: require tokenizer component.
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(Boost COMPONENTS filesystem unit_test_framework REQUIRED)
+add_definitions(-DBOOST_TEST_DYN_LINK)
 
 if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
@@ -62,7 +66,4 @@ add_definitions(-DLOCALE_DIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
 
 add_subdirectory(src)
 add_subdirectory(locale)
-
-if (DEBUG)
-	add_subdirectory(tests)
-endif ()
+add_subdirectory(tests)

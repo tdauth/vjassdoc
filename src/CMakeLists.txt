@@ -80,6 +80,8 @@ add_executable(vjassdoc main.cpp)
 target_link_libraries(vjassdoc vjassdoclib)
 set_target_properties(vjassdoc PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
+add_subdirectory(test)
+
 if (GUI)
 	add_subdirectory(gui)
 endif ()
