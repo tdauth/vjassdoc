@@ -47,16 +47,17 @@ class Type : public Object
 		virtual std::string sqlStatement() const;
 #endif
 		class Type* type() const;
+		const std::string& typeExpression() const;
 		class Object* size() const; //Global (constant), Member (static, constant), Function (constant), Method (static, constant), Literal
 		/**
 		* If the size is not an object it may be an integer value.
-		* @return Returns the size. If the type has no size this value will be -1.
+		* \return Returns the size. If the type has no size this value will be -1.
 		*/
 		int sizeLiteral() const;
 
 	protected:
-		std::string typeExpression;
-		std::string sizeExpression;
+		std::string m_typeExpression;
+		std::string m_sizeExpression;
 
 		class Type *m_type;
 		class Object *m_size;
@@ -67,6 +68,11 @@ inline class Type* Type::type() const
 	return this->m_type;
 }
 
+inline const std::string& Type::typeExpression() const
+{
+	return this->m_typeExpression;
+}
+
 inline class Object* Type::size() const
 {
 	return this->m_size;
@@ -74,10 +80,12 @@ inline class Object* Type::size() const
 
 inline int Type::sizeLiteral() const
 {
-	if (sizeExpression.empty() || !isdigit(sizeExpression[0])) //if it is not a literal value
+	if (m_sizeExpression.empty() || !isdigit(m_sizeExpression[0])) //if it is not a literal value
+	{
 		return -1;
+	}
 
-	return atoi(sizeExpression.c_str());
+	return atoi(m_sizeExpression.c_str());
 }
 
 }

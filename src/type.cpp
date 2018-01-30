@@ -29,7 +29,7 @@
 namespace vjassdoc
 {
 
-Type::Type(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &typeExpression, const std::string &sizeExpression) : typeExpression(typeExpression), sizeExpression(sizeExpression), m_type(0), m_size(0), Object(parser, identifier, sourceFile, line, docComment)
+Type::Type(class Parser *parser, const std::string &identifier, class SourceFile *sourceFile, unsigned int line, class DocComment *docComment, const std::string &typeExpression, const std::string &sizeExpression) : m_typeExpression(typeExpression), m_sizeExpression(sizeExpression), m_type(0), m_size(0), Object(parser, identifier, sourceFile, line, docComment)
 {
 }
 
@@ -39,38 +39,52 @@ Type::Type(Parser *parser) : m_type(0), m_size(0), Object(parser)
 
 void Type::init()
 {
-	if (!this->typeExpression.empty())
+	if (!this->m_typeExpression.empty())
 	{
-		this->m_type = boost::polymorphic_downcast<Type*>(this->parser()->searchObjectInList(this->typeExpression, Parser::Types));
+		this->m_type = boost::polymorphic_downcast<Type*>(this->parser()->searchObjectInList(this->m_typeExpression, Parser::Types));
 
-		if (this->m_type != 0)
-			this->typeExpression.clear();
+		if (this->m_type != nullptr)
+		{
+			this->m_typeExpression.clear();
+		}
 	}
 	else
-		this->typeExpression = '-';
-
-	if (this->sizeExpression.empty())
 	{
-		this->sizeExpression = '-';
+		this->m_typeExpression = '-';
+	}
+
+	if (this->m_sizeExpression.empty())
+	{
+		this->m_sizeExpression = '-';
 		return;
 	}
 
-	if (isdigit(this->sizeExpression[0])) //expression can be an integer like 43
+	if (isdigit(this->m_sizeExpression[0])) // expression can be an integer like 42
+	{
 		return;
+	}
 
-	this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Globals, this);
-
-	if (this->m_size == 0)
-		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Members, this);
+	this->m_size = this->parser()->searchObjectInList(this->m_sizeExpression, Parser::Globals, this);
 
 	if (this->m_size == 0)
-		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Functions, this);
+	{
+		this->m_size = this->parser()->searchObjectInList(this->m_sizeExpression, Parser::Members, this);
+	}
 
 	if (this->m_size == 0)
-		this->m_size = this->parser()->searchObjectInList(this->sizeExpression, Parser::Methods, this);
+	{
+		this->m_size = this->parser()->searchObjectInList(this->m_sizeExpression, Parser::Functions, this);
+	}
+
+	if (this->m_size == 0)
+	{
+		this->m_size = this->parser()->searchObjectInList(this->m_sizeExpression, Parser::Methods, this);
+	}
 
 	if (this->m_size != 0)
-		this->sizeExpression.clear();
+	{
+		this->m_sizeExpression.clear();
+	}
 }
 
 void Type::pageNavigation(std::ofstream &file) const
@@ -93,9 +107,9 @@ void Type::page(std::ofstream &file) const
 	<< "\t\t<h2><a name=\"Source File\">" << _("Source File") << "</a></h2>\n"
 	<< "\t\t" << SourceFile::sourceFileLineLink(this) << '\n'
 	<< "\t\t<h2><a name=\"Inherited Type\">" << _("Inherited Type") << "</a></h2>\n"
-	<< "\t\t" << Object::objectPageLink(this->type(), this->typeExpression) << '\n'
+	<< "\t\t" << Object::objectPageLink(this->type(), this->m_typeExpression) << '\n'
 	<< "\t\t<h2><a name=\"Size\">" << _("Size") << "</a></h2>\n"
-	<< "\t\t" << Object::objectPageLink(this->size(), this->sizeExpression) << '\n'
+	<< "\t\t" << Object::objectPageLink(this->size(), this->m_sizeExpression) << '\n'
 	;
 }
 

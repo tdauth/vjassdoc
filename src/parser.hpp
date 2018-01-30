@@ -128,6 +128,10 @@ class Parser
 		Parser(class Vjassdoc *parent);
 		~Parser();
 
+		/**
+		 * Generates a new ID for an object based on the previous ID.
+		 * The new ID is + 1 of the old ID.
+		 */
 		Object::IdType nextId();
 
 		void createInheritanceListPage();
@@ -161,11 +165,11 @@ class Parser
 
 		/**
 		* Returns a user-specific list by iterating one of the parsers lists and calling a comparator.
-		* @param list List which is iterated.
-		* @param ComparatorType Comparator which is used for comparisions. If it returns true object will be added to user-specific list.
-		* @param object Comparators allows to compare two objects. If you don't have to compare two objects this value can be 0.
-		* @return Returns the user-specific list.
-		* @see Parser::searchObjectInCustomList
+		* \param list List which is iterated.
+		* \param ComparatorType Comparator which is used for comparisions. If it returns true object will be added to user-specific list.
+		* \param object Comparators allows to compare two objects. If you don't have to compare two objects this value can be 0.
+		* \return Returns the user-specific list.
+		* \sa Parser::searchObjectInCustomList()
 		*/
 		template<typename ComparatorType>
 		SpecificObjectList getSpecificList(List list, const Object *object = 0);
@@ -282,7 +286,9 @@ template<typename ListType>
 Object* Parser::searchObjectInCustomList(ListType &objectList, const std::string &identifier, Parser::SearchMode searchMode, const Object *object)
 {
 	if (objectList.size() == 0)
-		return 0;
+	{
+		return nullptr;
+	}
 
 	boost::iterator_range<typename ListType::iterator> range = objectList.equal_range(identifier);
 

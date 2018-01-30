@@ -1,6 +1,5 @@
 # vjassdoc
 This program is a simple JASS and vJass documentation generation tool.
-It has been written by Tamino Dauth <tamino@cdauth.de>.
 The program can parse multiple JASS and vJass file and generate HTML files from it.
 It does also support creating an SQLite database.
 The parser has been written manually and does not rely on tools like Bison or Boost.Spirit.

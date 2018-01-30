@@ -114,3 +114,20 @@ BOOST_FIXTURE_TEST_CASE(ParseNativeFunction, MyFixture)
 	BOOST_CHECK(f->returnType() == nullptr);
 	BOOST_CHECK_EQUAL("race", f->returnTypeExpression());
 }
+
+BOOST_FIXTURE_TEST_CASE(ParseType, MyFixture)
+{
+	std::list<std::string> filePaths;
+	filePaths.push_back("type.j");
+	parser.parse(filePaths);
+	/*
+	 * There are already default JASS types.
+	 */
+	BOOST_REQUIRE_EQUAL(7, parser.getList(Parser::Types).size());
+	Type *t = dynamic_cast<Type*>(parser.searchObjectInList("agent", Parser::Types));
+	BOOST_REQUIRE(t != nullptr);
+	BOOST_CHECK_EQUAL("agent", t->identifier());
+	BOOST_CHECK(t->size() == nullptr);
+	BOOST_CHECK(t->type() != nullptr);
+	BOOST_CHECK_EQUAL(parser.handleType(), t->type());
+}

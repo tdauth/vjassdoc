@@ -83,9 +83,11 @@ Parser::Parser(Vjassdoc *parent) : m_parent(parent),
 		m_handleType(new Type(this, "handle", 0, 0, 0, "", "")),
 		m_codeType(new Type(this, "code", 0, 0, 0, "", ""))
 {
-	//add default types
+	// Add default types
 	if (parent->optionVerbose())
-		std::cout << _("Adding default Jass types.") << std::endl;
+	{
+		std::cout << _("Adding default JASS types.") << std::endl;
+	}
 
 	this->add(m_integerType);
 	this->add(m_realType);
@@ -95,12 +97,14 @@ Parser::Parser(Vjassdoc *parent) : m_parent(parent),
 	this->add(m_codeType);
 }
 
-//Default Jass types are in lists!
+// Default JASS types are in lists!
 Parser::~Parser()
 {
 #ifdef SQLITE
 	for (std::vector<struct Database*>::iterator iterator = this->m_databases.begin(); iterator != this->m_databases.end(); ++iterator)
+	{
 		delete *iterator;
+	}
 
 	this->m_databases.clear();
 #endif
@@ -876,7 +880,9 @@ class Object* Parser::searchObjectInLastDatabase(const Object::IdType &id)
 class Object* Parser::searchObjectInList(const std::string &identifier, List list, SearchMode searchMode, const class Object *object)
 {
 	if (!parent()->optionParseObjectsOfList(list))
+	{
 		return 0;
+	}
 
 	ObjectList &objectList = this->getList(list);
 
