@@ -27,8 +27,12 @@
 
 using namespace vjassdoc;
 
-BOOST_AUTO_TEST_CASE(ParseFunction)
+struct MyFixture
 {
+	MyFixture() : program(false, false, true, true, true, false, false, false, true, "", "", false, false, false, parseObjectsOfList, "Test", "", importDirs, filePaths, databases), parser(&program)
+	{
+	}
+
 	bool parseObjectsOfList[Parser::MaxLists] =
 	{
 		true, //comments
@@ -56,11 +60,16 @@ BOOST_AUTO_TEST_CASE(ParseFunction)
 		true //doc comments
 	};
 	std::list<std::string> importDirs;
+	std::list<std::string> databases;
+	std::list<std::string> filePaths;
+	Vjassdoc program;
+	Parser parser;
+};
+
+BOOST_FIXTURE_TEST_CASE(ParseFunction, MyFixture)
+{
 	std::list<std::string> filePaths;
 	filePaths.push_back("function.j");
-	std::list<std::string> databases;
-	Vjassdoc program(false, false, true, true, true, false, false, false, true, "", "", false, false, false, parseObjectsOfList, "Test", "", importDirs, filePaths, databases);
-	Parser parser(&program);
 	parser.parse(filePaths);
 	BOOST_REQUIRE_EQUAL(1, parser.getList(Parser::Functions).size());
 	Function *f = dynamic_cast<Function*>(parser.searchObjectInList("pow", Parser::Functions));
@@ -81,4 +90,27 @@ BOOST_AUTO_TEST_CASE(ParseFunction)
 	BOOST_CHECK_EQUAL(parser.integerType(), parameters.back()->type());
 	BOOST_CHECK(f->returnType() != nullptr);
 	BOOST_CHECK_EQUAL(parser.integerType(), f->returnType());
+}
+
+BOOST_FIXTURE_TEST_CASE(ParseNativeFunction, MyFixture)
+{
+	std::list<std::string> filePaths;
+	filePaths.push_back("native.j");
+	parser.parse(filePaths);
+	BOOST_REQUIRE_EQUAL(1, parser.getList(Parser::Functions).size());
+	Function *f = dynamic_cast<Function*>(parser.searchObjectInList("ConvertRace", Parser::Functions));
+	BOOST_REQUIRE(f != nullptr);
+	BOOST_CHECK(!f->isPublic());
+	BOOST_CHECK(f->isConstant());
+	BOOST_CHECK(f->isNative());
+	BOOST_CHECK(f->library() == nullptr);
+	BOOST_CHECK(f->scope() == nullptr);
+	BOOST_CHECK(!f->isPrivate());
+	BOOST_CHECK_EQUAL(1, f->parameters().size());
+	const FunctionInterface::Parameters &parameters = f->parameters();
+	BOOST_CHECK_EQUAL("i", parameters.front()->identifier());
+	BOOST_CHECK(parameters.front()->type() != nullptr);
+	BOOST_CHECK_EQUAL(parser.integerType(), parameters.front()->type());
+	BOOST_CHECK(f->returnType() == nullptr);
+	BOOST_CHECK_EQUAL("race", f->returnTypeExpression());
 }
